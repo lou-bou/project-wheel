@@ -1,16 +1,60 @@
-# React + Vite
+# Project Wheel
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A personal tool for managing a backlog of project ideas and spinning a wheel to pick what to build next. Filter by category, difficulty, or dev type before spinning, track status (idea → doing → completed), and browse the full list.
 
-Currently, two official plugins are available:
+## Ownership
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The Supabase project and Vercel deployment for this repo are tied to the repo owner's GitHub account. That's where:
+- the database (tables, RLS policies, seed data) lives
+- SQL migrations are run (SQL Editor)
+- deployments and environment variables are managed
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React (Vite)
+- Supabase (Postgres + Auth)
+- Deployed on Vercel
 
-## Expanding the ESLint configuration
+## Local setup
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+```
+
+Create `.env` at the project root:
+
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+Get these from the Supabase dashboard → Settings → API.
+
+```bash
+npm run dev
+```
+
+## Database
+
+Schema, seed data, and the ownership migration live in the repo's `sql/` folder. Run them in order in the Supabase SQL Editor:
+
+1. `schema.sql` — tables + RLS policies
+2. `seed.sql` — initial project/category data
+3. `migration.sql` — adds `owner_id` to scope rows per account, back-fills existing rows, tightens RLS to per-owner access
+
+## Auth
+
+Email + password (Supabase Auth). Each account only sees its own projects and categories — enforced via RLS on `owner_id`.
+
+Password reset not yet setup. Also no email confirmations.
+
+Auth redirect URLs are configured under Supabase → Authentication → URL Configuration, and must match wherever the app is actually running (local dev port or the Vercel URL).
+
+## Deployment
+
+```bash
+npm install -g vercel
+vercel
+```
+
+Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables in the Vercel project settings, then add the deployed URL to Supabase's Site URL and Redirect URLs.
