@@ -9,105 +9,111 @@ const DIFFICULTIES = ["Easy", "Medium", "Hard", "Expert"];
 const DEV_TYPES    = ["Manual", "Assisted"];
 const STATUSES     = ["idea", "doing", "completed"];
 
-const DIFF_COLOR = { Easy: "#4ade80", Medium: "#f0b429", Hard: "#fb923c", Expert: "#f87171" };
-const STATUS_COLOR = { idea: "#6b7280", doing: "#7c5cfc", completed: "#4ade80" };
-const PALETTE = ["#7c5cfc","#5b4cdc","#6d4fc9","#4a3ab8","#8b6ffd","#9c7fff","#6040e0","#7755ee"];
+// ── Arcade CRT palette ─────────────────────────────────────────────────────
+const BG        = "#0a0d0a";
+const PANEL     = "#10140f";
+const BORDER    = "#233024";
+const BORDER_HI = "#39ff88";
+const TEXT      = "#d7ffe0";
+const TEXT_DIM  = "#5c7a63";
+const GREEN     = "#39ff88";
+const GREEN_DIM = "#1e7a45";
+const HOT       = "#ff2ecb";
 
-// ── SVG Icons (no emojis) ─────────────────────────────────────────────────────
+const DIFF_COLOR = { Easy: "#39ff88", Medium: "#f0c419", Hard: "#ff8b3d", Expert: "#ff4d4d" };
+const STATUS_COLOR = { idea: "#5c7a63", doing: "#22d3ee", completed: "#39ff88" };
+const PALETTE = ["#39ff88","#0d4d2b","#f0c419","#1e7a45","#2ecc71","#166534","#a8e6b8","#0a3d1f"];
+
+function readableTextColor(hex) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  const luminance=(0.299*r+0.587*g+0.114*b)/255;
+  return luminance>0.55 ? "#0a0d0a" : "#eafff0";
+}
+
+const FONT = "'VT323', monospace";
+const FONT_HEAD = "'Press Start 2P', monospace";
+
+// ── SVG Icons ─────────────────────────────────────────────────────────────
 const Icon = {
   wheel: (sz=22) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
       <circle cx="12" cy="12" r="10"/>
       <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/>
       <line x1="12" y1="2" x2="12" y2="9.5"/>
       <line x1="12" y1="14.5" x2="12" y2="22"/>
       <line x1="2" y1="12" x2="9.5" y2="12"/>
       <line x1="14.5" y1="12" x2="22" y2="12"/>
-      <line x1="4.22" y1="4.22" x2="9.64" y2="9.64"/>
-      <line x1="14.36" y1="14.36" x2="19.78" y2="19.78"/>
-      <line x1="19.78" y1="4.22" x2="14.36" y2="9.64"/>
-      <line x1="9.64" y1="14.36" x2="4.22" y2="19.78"/>
     </svg>
   ),
   grid: (sz=18) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
     </svg>
   ),
   edit: (sz=15) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
       <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>
     </svg>
   ),
   trash: (sz=15) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
       <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
       <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
     </svg>
   ),
   plus: (sz=16) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
     </svg>
   ),
   settings: (sz=16) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
       <circle cx="12" cy="12" r="3"/>
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
     </svg>
   ),
   signout: (sz=16) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
       <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
     </svg>
   ),
   chevronDown: (sz=14) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter">
       <polyline points="6 9 12 15 18 9"/>
     </svg>
   ),
   chevronUp: (sz=14) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter">
       <polyline points="18 15 12 9 6 15"/>
     </svg>
   ),
   link: (sz=14) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
       <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
     </svg>
   ),
 };
 
-// ── Wheel SVG Logo ────────────────────────────────────────────────────────────
+// ── Wheel logo — blocky pixel-terminal mark ─────────────────────────────────
 function WheelLogo({ size = 32 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <circle cx="20" cy="20" r="18" fill="#7c5cfc" opacity="0.15"/>
-      <circle cx="20" cy="20" r="18" stroke="#7c5cfc" strokeWidth="2"/>
-      {[0,45,90,135,180,225,270,315].map((deg, i) => {
-        const rad = (deg * Math.PI) / 180;
-        const x2 = 20 + Math.cos(rad) * 13;
-        const y2 = 20 + Math.sin(rad) * 13;
-        return <line key={i} x1="20" y1="20" x2={x2} y2={y2} stroke="#7c5cfc" strokeWidth="1.5" strokeLinecap="round"/>;
-      })}
-      {[0,45,90,135,180,225,270,315].map((deg, i) => {
-        const rad = (deg * Math.PI) / 180;
-        const x = 20 + Math.cos(rad) * 14.5;
-        const y = 20 + Math.sin(rad) * 14.5;
-        return <circle key={i} cx={x} cy={y} r="1.8" fill="#9c7fff"/>;
-      })}
-      <polygon points="20,2 17,8 23,8" fill="#f0b429"/>
-      <circle cx="20" cy="20" r="3.5" fill="#7c5cfc"/>
-      <circle cx="20" cy="20" r="1.8" fill="#fff"/>
+      <rect x="1" y="1" width="38" height="38" fill="#0a0d0a" stroke="#39ff88" strokeWidth="2"/>
+      <rect x="18" y="6" width="4" height="8" fill="#39ff88"/>
+      <rect x="18" y="26" width="4" height="8" fill="#39ff88"/>
+      <rect x="6" y="18" width="8" height="4" fill="#39ff88"/>
+      <rect x="26" y="18" width="8" height="4" fill="#39ff88"/>
+      <rect x="17" y="17" width="6" height="6" fill="#ff2ecb"/>
+      <rect x="18" y="2" width="4" height="4" fill="#f0c419"/>
     </svg>
   );
 }
 
-// ── Supabase helpers ──────────────────────────────────────────────────────────
+// ── Supabase helpers ─────────────────────────────────────────────────────────
 async function fetchAll() {
   const [{ data: projects }, { data: categories }, { data: pc }] = await Promise.all([
     supabase.from("projects").select("*").order("name"),
@@ -125,9 +131,21 @@ async function fetchAll() {
   };
 }
 
+// ── CRT overlay (scanlines + vignette) ──────────────────────────────────────
+function CRTOverlay() {
+  return (
+    <div style={{
+      position:"fixed", inset:0, pointerEvents:"none", zIndex:9999,
+      background:"repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px)",
+      boxShadow:"inset 0 0 160px rgba(0,0,0,0.7)",
+      mixBlendMode:"multiply"
+    }}/>
+  );
+}
+
 // ── Auth Screen ───────────────────────────────────────────────────────────────
 function AuthScreen() {
-  const [mode, setMode]   = useState("signin"); // "signin" | "signup"
+  const [mode, setMode]   = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -147,31 +165,31 @@ function AuthScreen() {
   }
 
   return (
-    <div style={{ minHeight:"100vh", background:"#0f1117", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif" }}>
-      <div style={{ background:"#161b27", border:"1px solid #1e2535", borderRadius:20, padding:"52px 44px", width:420, textAlign:"center" }}>
-        <div style={{ display:"flex", justifyContent:"center", marginBottom:16 }}><WheelLogo size={52}/></div>
-        <h1 style={{ color:"#fff", fontSize:27, fontFamily:"'Space Grotesk',sans-serif", margin:"0 0 6px" }}>Project Wheel</h1>
-        <p style={{ color:"#6b7280", fontSize:16, margin:"0 0 32px" }}>Your project ideas, one spin away.</p>
+    <div style={{ minHeight:"100vh", background:BG, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:FONT }}>
+      <div style={{ background:PANEL, border:`2px solid ${BORDER}`, padding:"48px 40px", width:420, textAlign:"center" }}>
+        <div style={{ display:"flex", justifyContent:"center", marginBottom:20 }}><WheelLogo size={56}/></div>
+        <h1 style={{ color:GREEN, fontSize:18, fontFamily:FONT_HEAD, margin:"0 0 10px", textShadow:`0 0 6px ${GREEN}` }}>PROJECT WHEEL</h1>
+        <p style={{ color:TEXT_DIM, fontSize:21, margin:"0 0 30px" }}>&gt; pick what to build next</p>
         {signedUp ? (
-          <p style={{ color:"#7c5cfc", fontSize:17 }}>Account created — check your email to confirm, then sign in.</p>
+          <p style={{ color:GREEN, fontSize:21 }}>Account created — check your email to confirm, then sign in.</p>
         ) : (
           <>
             <input type="email" placeholder="your@email.com" value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width:"100%", boxSizing:"border-box", padding:"14px 16px", background:"#0f1117", border:"1px solid #1e2535", borderRadius:10, color:"#fff", fontSize:16, outline:"none", marginBottom:12 }}
+              style={{ width:"100%", boxSizing:"border-box", padding:"12px 14px", background:BG, border:`1px solid ${BORDER}`, color:TEXT, fontSize:20, fontFamily:FONT, outline:"none", marginBottom:12 }}
             />
             <input type="password" placeholder="password" value={password}
               onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key==="Enter" && handleSubmit()}
-              style={{ width:"100%", boxSizing:"border-box", padding:"14px 16px", background:"#0f1117", border:"1px solid #1e2535", borderRadius:10, color:"#fff", fontSize:16, outline:"none", marginBottom:12 }}
+              style={{ width:"100%", boxSizing:"border-box", padding:"12px 14px", background:BG, border:`1px solid ${BORDER}`, color:TEXT, fontSize:20, fontFamily:FONT, outline:"none", marginBottom:12 }}
             />
-            {err && <p style={{ color:"#f87171", fontSize:14, marginBottom:10 }}>{err}</p>}
+            {err && <p style={{ color:"#ff4d4d", fontSize:17, marginBottom:10 }}>{err}</p>}
             <button onClick={handleSubmit} disabled={loading||!email||!password}
-              style={{ width:"100%", padding:"14px", background:"#7c5cfc", border:"none", borderRadius:10, color:"#fff", fontSize:17, fontWeight:600, cursor:"pointer", opacity:loading||!email||!password?0.6:1, marginBottom:16 }}>
-              {loading ? "…" : mode==="signin" ? "Sign in" : "Create account"}
+              style={{ width:"100%", padding:"13px", background:GREEN, border:"none", color:"#0a0d0a", fontSize:16, fontFamily:FONT_HEAD, cursor:"pointer", opacity:loading||!email||!password?0.5:1, marginBottom:18 }}>
+              {loading ? "..." : mode==="signin" ? "SIGN IN" : "CREATE ACCOUNT"}
             </button>
             <button onClick={()=>{setMode(mode==="signin"?"signup":"signin");setErr("");}}
-              style={{ background:"none", border:"none", color:"#6b7280", fontSize:14, cursor:"pointer" }}>
-              {mode==="signin" ? "Need an account? Sign up" : "Already have an account? Sign in"}
+              style={{ background:"none", border:"none", color:TEXT_DIM, fontSize:18, fontFamily:FONT, cursor:"pointer", textDecoration:"underline" }}>
+              {mode==="signin" ? "need an account? sign up" : "already have an account? sign in"}
             </button>
           </>
         )}
@@ -201,7 +219,7 @@ function SpinWheel({ projects, onResult }) {
     const ctx = off.getContext("2d");
     const cx = size/2, cy = size/2, r = cx - 14;
     if (!ps.length) {
-      ctx.fillStyle="#1e2535"; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=PANEL; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
       staticRef.current = off; return;
     }
     const slice = (Math.PI*2)/ps.length;
@@ -209,14 +227,14 @@ function SpinWheel({ projects, onResult }) {
       const s2=i*slice, e=s2+slice;
       ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,s2,e); ctx.closePath();
       ctx.fillStyle=PALETTE[i%PALETTE.length]; ctx.fill();
-      ctx.strokeStyle="#0f1117"; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.strokeStyle="#0a0d0a"; ctx.lineWidth=3; ctx.stroke();
       const mid=s2+slice/2;
       const maxLen=Math.max(4,Math.min(20,Math.floor((r*0.72*slice)/7)));
       const label=p.name.length>maxLen?p.name.slice(0,maxLen-1)+"…":p.name;
-      const fs=ps.length>40?9:ps.length>20?11:ps.length>10?13:15;
+      const fs=ps.length>40?12:ps.length>20?14:ps.length>10?16:19;
       ctx.save(); ctx.translate(cx,cy); ctx.rotate(mid);
-      ctx.textAlign="right"; ctx.fillStyle="rgba(255,255,255,0.92)";
-      ctx.font=`600 ${fs}px Inter,sans-serif`; ctx.fillText(label,r-14,fs*0.38);
+      ctx.textAlign="right"; ctx.fillStyle=readableTextColor(PALETTE[i%PALETTE.length]);
+      ctx.font=`${fs}px 'VT323',monospace`; ctx.fillText(label,r-14,fs*0.38);
       ctx.restore();
     });
     staticRef.current = off;
@@ -228,19 +246,20 @@ function SpinWheel({ projects, onResult }) {
     ctx.clearRect(0,0,size,size);
     ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle); ctx.translate(-cx,-cy);
     ctx.drawImage(staticRef.current,0,0); ctx.restore();
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.lineWidth=4; ctx.strokeStyle=GREEN; ctx.stroke();
     if(!projectsRef.current.length) {
-      ctx.fillStyle="#6b7280"; ctx.font="17px Inter,sans-serif";
+      ctx.fillStyle=TEXT_DIM; ctx.font="18px 'VT323',monospace";
       ctx.textAlign="center"; ctx.textBaseline="middle";
-      ctx.fillText("No projects match filters",cx,cy);
+      ctx.fillText("no projects match filters",cx,cy+55);
     }
     ctx.beginPath(); ctx.arc(cx,cy,24,0,Math.PI*2);
-    ctx.fillStyle="#0f1117"; ctx.fill();
-    ctx.strokeStyle="#7c5cfc"; ctx.lineWidth=3; ctx.stroke();
+    ctx.fillStyle="#0a0d0a"; ctx.fill();
+    ctx.lineWidth=3; ctx.strokeStyle=GREEN; ctx.stroke();
     ctx.beginPath(); ctx.arc(cx,cy,10,0,Math.PI*2);
-    ctx.fillStyle="#7c5cfc"; ctx.fill();
+    ctx.fillStyle=GREEN; ctx.fill();
     ctx.beginPath();
     ctx.moveTo(cx,cy-r-6); ctx.lineTo(cx-14,cy-r+18); ctx.lineTo(cx+14,cy-r+18);
-    ctx.closePath(); ctx.fillStyle="#f0b429"; ctx.fill();
+    ctx.closePath(); ctx.fillStyle=HOT; ctx.fill();
   }
 
   function spin() {
@@ -259,7 +278,9 @@ function SpinWheel({ projects, onResult }) {
       else{
         spinRef.current.spinning=false;
         const ps=projectsRef.current, slice=(Math.PI*2)/ps.length;
-        const norm=(((-(spinRef.current.angle)%(Math.PI*2))+Math.PI*2)%(Math.PI*2));
+        const pointerAngle=-Math.PI/2;
+        let norm=(pointerAngle-spinRef.current.angle)%(Math.PI*2);
+        norm=(norm+Math.PI*2)%(Math.PI*2);
         onResult(ps[Math.floor(norm/slice)%ps.length]);
       }
     }
@@ -287,14 +308,14 @@ function SpinWheel({ projects, onResult }) {
   return (
     <div ref={wrapRef} style={{ flex:"1 1 auto", minHeight:0, width:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:32 }}>
       <canvas ref={canvasRef} onClick={spin}
-        style={{ borderRadius:"50%", cursor:"pointer", filter:"drop-shadow(0 0 40px rgba(124,92,252,0.4))", maxWidth:"100%", maxHeight:"100%", flexShrink:1, minHeight:0 }}
+        style={{ cursor:"pointer", filter:`drop-shadow(0 0 10px ${GREEN}44)`, maxWidth:"100%", maxHeight:"100%", flexShrink:1, minHeight:0 }}
       />
       <button onClick={spin} style={{
-        padding:"19px 72px", background:"linear-gradient(135deg,#7c5cfc,#5b4cdc)", border:"none",
-        borderRadius:14, color:"#fff", fontSize:22, fontWeight:700, cursor:"pointer",
-        fontFamily:"'Space Grotesk',sans-serif", boxShadow:"0 6px 28px rgba(124,92,252,0.5)", letterSpacing:0.3,
+        padding:"18px 68px", background:GREEN, border:"none",
+        color:"#0a0d0a", fontSize:18, fontFamily:FONT_HEAD, cursor:"pointer",
+        boxShadow:`0 0 20px ${GREEN}55`, letterSpacing:1,
         flexShrink:0
-      }}>Spin</button>
+      }}>SPIN</button>
     </div>
   );
 }
@@ -304,30 +325,30 @@ function ResultModal({ project, categories, onAccept, onReroll, onClose }) {
   const [expanded, setExpanded] = useState(false);
   const catNames=(project.categoryIds||[]).map(id=>categories.find(c=>c.id===id)?.name).filter(Boolean);
   return (
-    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100 }} onClick={onClose}>
-      <div style={{ background:"#161b27",border:"1px solid #7c5cfc",borderRadius:20,padding:"40px 40px 36px",width:520,boxShadow:"0 0 80px rgba(124,92,252,0.3)" }} onClick={e=>e.stopPropagation()}>
-        <button onClick={()=>setExpanded(!expanded)} style={{ width:"100%",background:"none",border:"none",padding:0,cursor:"pointer",textAlign:"left",marginBottom:16 }}>
-          <h2 style={{ color:"#fff",fontSize:30,fontFamily:"'Space Grotesk',sans-serif",margin:0,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,lineHeight:1.25 }}>
+    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100 }} onClick={onClose}>
+      <div style={{ background:PANEL,border:`2px solid ${GREEN}`,padding:"36px 36px 32px",width:520,boxShadow:`0 0 40px ${GREEN}33` }} onClick={e=>e.stopPropagation()}>
+        <button onClick={()=>setExpanded(!expanded)} style={{ width:"100%",background:"none",border:"none",padding:0,cursor:"pointer",textAlign:"left",marginBottom:14 }}>
+          <h2 style={{ color:GREEN,fontSize:24,fontFamily:FONT,margin:0,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,lineHeight:1.2 }}>
             {project.name}
-            <span style={{ color:"#6b7280",flexShrink:0 }}>{expanded?Icon.chevronUp(20):Icon.chevronDown(20)}</span>
+            <span style={{ color:TEXT_DIM,flexShrink:0 }}>{expanded?Icon.chevronUp(20):Icon.chevronDown(20)}</span>
           </h2>
         </button>
         {expanded && (
-          <p style={{ color:"#9ca3af",fontSize:16,lineHeight:1.65,margin:"0 0 20px" }}>
-            {project.description||"No description yet."}
+          <p style={{ color:TEXT_DIM,fontSize:20,lineHeight:1.5,margin:"0 0 18px" }}>
+            {project.description||"no description yet."}
           </p>
         )}
-        <div style={{ display:"flex",gap:8,flexWrap:"wrap",marginBottom:30 }}>
+        <div style={{ display:"flex",gap:8,flexWrap:"wrap",marginBottom:28 }}>
           <Badge color={DIFF_COLOR[project.difficulty]}>{project.difficulty}</Badge>
-          <Badge color="#6b7280">{project.dev_type}</Badge>
-          {catNames.map(c=><Badge key={c} color="#6b7280">{c}</Badge>)}
+          <Badge color={TEXT_DIM}>{project.dev_type}</Badge>
+          {catNames.map(c=><Badge key={c} color={TEXT_DIM}>{c}</Badge>)}
         </div>
         <div style={{ display:"flex",gap:12 }}>
-          <button onClick={onAccept} style={{ flex:1,padding:"16px",background:"#7c5cfc",border:"none",borderRadius:10,color:"#fff",fontSize:17,fontWeight:600,cursor:"pointer" }}>
-            Accept
+          <button onClick={onAccept} style={{ flex:1,padding:"14px",background:GREEN,border:"none",color:"#0a0d0a",fontSize:16,fontFamily:FONT_HEAD,cursor:"pointer" }}>
+            ACCEPT
           </button>
-          <button onClick={onReroll} style={{ flex:1,padding:"16px",background:"#1e2535",border:"1px solid #2d3748",borderRadius:10,color:"#9ca3af",fontSize:17,cursor:"pointer" }}>
-            Reroll
+          <button onClick={onReroll} style={{ flex:1,padding:"14px",background:"none",border:`1px solid ${BORDER}`,color:TEXT_DIM,fontSize:16,fontFamily:FONT_HEAD,cursor:"pointer" }}>
+            REROLL
           </button>
         </div>
       </div>
@@ -337,7 +358,7 @@ function ResultModal({ project, categories, onAccept, onReroll, onClose }) {
 
 function Badge({ color, children }) {
   return (
-    <span style={{ padding:"5px 14px",borderRadius:99,fontSize:14,fontWeight:500,background:`${color}22`,color }}>
+    <span style={{ padding:"4px 12px",fontSize:17,fontFamily:FONT,border:`1px solid ${color}`,color }}>
       {children}
     </span>
   );
@@ -347,29 +368,29 @@ function Badge({ color, children }) {
 function ProjectCard({ project, categories, onEdit, onDelete }) {
   const catNames=(project.categoryIds||[]).map(id=>categories.find(c=>c.id===id)?.name).filter(Boolean);
   return (
-    <div style={{ background:"#161b27",borderLeft:`4px solid ${DIFF_COLOR[project.difficulty]}`,borderRadius:"0 12px 12px 0",padding:"24px 26px",display:"flex",flexDirection:"column",gap:14 }}>
+    <div style={{ background:PANEL,borderLeft:`4px solid ${DIFF_COLOR[project.difficulty]}`,border:`1px solid ${BORDER}`,borderLeftWidth:4,borderLeftColor:DIFF_COLOR[project.difficulty],padding:"20px 22px",display:"flex",flexDirection:"column",gap:12 }}>
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
-        <h3 style={{ color:"#fff",fontSize:19,fontWeight:600,margin:0,lineHeight:1.35 }}>{project.name}</h3>
+        <h3 style={{ color:TEXT,fontSize:21,fontFamily:FONT,fontWeight:400,margin:0,lineHeight:1.3 }}>{project.name}</h3>
         <div style={{ display:"flex",gap:4,flexShrink:0,marginLeft:10 }}>
           <IconBtn onClick={()=>onEdit(project)}>{Icon.edit(17)}</IconBtn>
           <IconBtn onClick={()=>onDelete(project.id)}>{Icon.trash(17)}</IconBtn>
         </div>
       </div>
       {project.description && (
-        <p style={{ color:"#8b95a5",fontSize:15,margin:0,lineHeight:1.6,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden" }}>
+        <p style={{ color:TEXT_DIM,fontSize:18,margin:0,lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden" }}>
           {project.description}
         </p>
       )}
       <div style={{ display:"flex",gap:6,flexWrap:"wrap",alignItems:"center" }}>
         <Badge color={STATUS_COLOR[project.status]}>{project.status}</Badge>
         <Badge color={DIFF_COLOR[project.difficulty]}>{project.difficulty}</Badge>
-        <Badge color="#6b7280">{project.dev_type}</Badge>
-        {catNames.map(c=><Badge key={c} color="#4b5563">{c}</Badge>)}
+        <Badge color={TEXT_DIM}>{project.dev_type}</Badge>
+        {catNames.map(c=><Badge key={c} color={TEXT_DIM}>{c}</Badge>)}
       </div>
       {project.status==="completed"&&project.link&&(
         <a href={project.link} target="_blank" rel="noreferrer"
-          style={{ color:"#7c5cfc",fontSize:15,display:"flex",alignItems:"center",gap:6,textDecoration:"none" }}>
-          {Icon.link(16)} View project
+          style={{ color:GREEN,fontSize:18,display:"flex",alignItems:"center",gap:6,textDecoration:"none",fontFamily:FONT }}>
+          {Icon.link(16)} view project
         </a>
       )}
     </div>
@@ -378,9 +399,9 @@ function ProjectCard({ project, categories, onEdit, onDelete }) {
 
 function IconBtn({ onClick, children }) {
   return (
-    <button onClick={onClick} style={{ background:"none",border:"none",cursor:"pointer",padding:"5px 7px",borderRadius:6,color:"#4b5563",display:"flex",alignItems:"center" }}
-      onMouseEnter={e=>e.currentTarget.style.color="#9ca3af"}
-      onMouseLeave={e=>e.currentTarget.style.color="#4b5563"}>
+    <button onClick={onClick} style={{ background:"none",border:"none",cursor:"pointer",padding:"5px 7px",color:TEXT_DIM,display:"flex",alignItems:"center" }}
+      onMouseEnter={e=>e.currentTarget.style.color=GREEN}
+      onMouseLeave={e=>e.currentTarget.style.color=TEXT_DIM}>
       {children}
     </button>
   );
@@ -394,57 +415,51 @@ function ProjectFormModal({ project, categories, onSave, onClose }) {
   function toggleCat(id){setForm(f=>({...f,categoryIds:f.categoryIds.includes(id)?f.categoryIds.filter(c=>c!==id):[...f.categoryIds,id]}));}
   async function handleSave(){if(!form.name.trim())return;setLoading(true);await onSave(form);setLoading(false);}
   return (
-    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20 }} onClick={onClose}>
-      <div style={{ background:"#161b27",border:"1px solid #1e2535",borderRadius:20,padding:38,width:560,maxHeight:"90vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
-        <h2 style={{ color:"#fff",fontSize:22,fontFamily:"'Space Grotesk',sans-serif",margin:"0 0 28px" }}>
-          {project?.id?"Edit project":"Add project"}
+    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20 }} onClick={onClose}>
+      <div style={{ background:PANEL,border:`2px solid ${BORDER}`,padding:34,width:560,maxHeight:"90vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+        <h2 style={{ color:GREEN,fontSize:16,fontFamily:FONT_HEAD,margin:"0 0 26px" }}>
+          {project?.id?"EDIT PROJECT":"ADD PROJECT"}
         </h2>
-        <div style={{ display:"flex",flexDirection:"column",gap:20 }}>
-          <Field label="Name"><input value={form.name} onChange={e=>set("name",e.target.value)} style={inputStyle}/></Field>
-          <Field label="Description"><textarea value={form.description} onChange={e=>set("description",e.target.value)} rows={3} style={{...inputStyle,resize:"vertical"}}/></Field>
+        <div style={{ display:"flex",flexDirection:"column",gap:18 }}>
+          <Field label="name"><input value={form.name} onChange={e=>set("name",e.target.value)} style={inputStyle}/></Field>
+          <Field label="description"><textarea value={form.description} onChange={e=>set("description",e.target.value)} rows={3} style={{...inputStyle,resize:"vertical"}}/></Field>
           <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14 }}>
-            <Field label="Difficulty">
-              <select value={form.difficulty} onChange={e=>set("difficulty",e.target.value)} style={inputStyle}>
-                {DIFFICULTIES.map(d=><option key={d}>{d}</option>)}
-              </select>
+            <Field label="difficulty">
+              <SelectField value={form.difficulty} onChange={e=>set("difficulty",e.target.value)} options={DIFFICULTIES}/>
             </Field>
-            <Field label="Dev type">
-              <select value={form.dev_type} onChange={e=>set("dev_type",e.target.value)} style={inputStyle}>
-                {DEV_TYPES.map(d=><option key={d}>{d}</option>)}
-              </select>
+            <Field label="dev type">
+              <SelectField value={form.dev_type} onChange={e=>set("dev_type",e.target.value)} options={DEV_TYPES}/>
             </Field>
-            <Field label="Status">
-              <select value={form.status} onChange={e=>set("status",e.target.value)} style={inputStyle}>
-                {STATUSES.map(s=><option key={s}>{s}</option>)}
-              </select>
+            <Field label="status">
+              <SelectField value={form.status} onChange={e=>set("status",e.target.value)} options={STATUSES}/>
             </Field>
           </div>
           {form.status==="completed"&&(
-            <Field label="Project link"><input value={form.link||""} onChange={e=>set("link",e.target.value)} style={inputStyle} placeholder="https://…"/></Field>
+            <Field label="project link"><input value={form.link||""} onChange={e=>set("link",e.target.value)} style={inputStyle} placeholder="https://…"/></Field>
           )}
-          <Field label="Categories">
-            <div style={{ display:"flex",flexWrap:"wrap",gap:9,marginTop:4 }}>
+          <Field label="categories">
+            <div style={{ display:"flex",flexWrap:"wrap",gap:8,marginTop:4 }}>
               {categories.map(c=>{
                 const active=form.categoryIds.includes(c.id);
                 return(
                   <button key={c.id} onClick={()=>toggleCat(c.id)} style={{
-                    padding:"7px 16px",borderRadius:99,fontSize:14,cursor:"pointer",
-                    border:active?"1px solid #7c5cfc":"1px solid #2d3748",
-                    background:active?"rgba(124,92,252,0.2)":"#1e2535",
-                    color:active?"#7c5cfc":"#9ca3af",
+                    padding:"6px 14px",fontSize:17,fontFamily:FONT,cursor:"pointer",
+                    border:active?`1px solid ${GREEN}`:`1px solid ${BORDER}`,
+                    background:active?`${GREEN}18`:"none",
+                    color:active?GREEN:TEXT_DIM,
                   }}>{c.name}</button>
                 );
               })}
             </div>
           </Field>
         </div>
-        <div style={{ display:"flex",gap:12,marginTop:30 }}>
+        <div style={{ display:"flex",gap:12,marginTop:28 }}>
           <button onClick={handleSave} disabled={loading||!form.name.trim()}
-            style={{ flex:1,padding:"15px",background:"#7c5cfc",border:"none",borderRadius:10,color:"#fff",fontSize:17,fontWeight:600,cursor:"pointer",opacity:loading||!form.name.trim()?0.6:1 }}>
-            {loading?"Saving…":"Save"}
+            style={{ flex:1,padding:"14px",background:GREEN,border:"none",color:"#0a0d0a",fontSize:16,fontFamily:FONT_HEAD,cursor:"pointer",opacity:loading||!form.name.trim()?0.5:1 }}>
+            {loading?"SAVING...":"SAVE"}
           </button>
-          <button onClick={onClose} style={{ padding:"15px 24px",background:"#1e2535",border:"none",borderRadius:10,color:"#9ca3af",fontSize:17,cursor:"pointer" }}>
-            Cancel
+          <button onClick={onClose} style={{ padding:"14px 22px",background:"none",border:`1px solid ${BORDER}`,color:TEXT_DIM,fontSize:16,fontFamily:FONT_HEAD,cursor:"pointer" }}>
+            CANCEL
           </button>
         </div>
       </div>
@@ -455,15 +470,28 @@ function ProjectFormModal({ project, categories, onSave, onClose }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label style={{ color:"#6b7280",fontSize:14,display:"block",marginBottom:8 }}>{label}</label>
+      <label style={{ color:TEXT_DIM,fontSize:16,fontFamily:FONT,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:0.5 }}>{label}</label>
       {children}
     </div>
   );
 }
 
+function SelectField({ value, onChange, options }) {
+  return (
+    <div style={{ position:"relative" }}>
+      <select value={value} onChange={onChange} style={{...inputStyle,appearance:"none",WebkitAppearance:"none",MozAppearance:"none",paddingRight:36,cursor:"pointer"}}>
+        {options.map(o=><option key={o}>{o}</option>)}
+      </select>
+      <span style={{ position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",color:TEXT_DIM,pointerEvents:"none",display:"flex" }}>
+        {Icon.chevronDown(15)}
+      </span>
+    </div>
+  );
+}
+
 const inputStyle = {
-  width:"100%",boxSizing:"border-box",padding:"13px 16px",background:"#0f1117",
-  border:"1px solid #1e2535",borderRadius:10,color:"#fff",fontSize:16,outline:"none",fontFamily:"Inter,sans-serif"
+  width:"100%",boxSizing:"border-box",padding:"11px 14px",background:BG,
+  border:`1px solid ${BORDER}`,color:TEXT,fontSize:19,outline:"none",fontFamily:FONT
 };
 
 // ── Category Manager ──────────────────────────────────────────────────────────
@@ -471,35 +499,35 @@ function CategoryManager({ categories, projects, onAdd, onRename, onDelete, onCl
   const [newName,setNewName]=useState("");
   const [editing,setEditing]=useState(null);
   return (
-    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100 }} onClick={onClose}>
-      <div style={{ background:"#161b27",border:"1px solid #1e2535",borderRadius:20,padding:38,width:520 }} onClick={e=>e.stopPropagation()}>
-        <h2 style={{ color:"#fff",fontSize:22,fontFamily:"'Space Grotesk',sans-serif",margin:"0 0 26px" }}>Manage categories</h2>
-        <div style={{ display:"flex",gap:10,marginBottom:22 }}>
+    <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100 }} onClick={onClose}>
+      <div style={{ background:PANEL,border:`2px solid ${BORDER}`,padding:34,width:520 }} onClick={e=>e.stopPropagation()}>
+        <h2 style={{ color:GREEN,fontSize:16,fontFamily:FONT_HEAD,margin:"0 0 24px" }}>MANAGE CATEGORIES</h2>
+        <div style={{ display:"flex",gap:10,marginBottom:20 }}>
           <input value={newName} onChange={e=>setNewName(e.target.value)}
             onKeyDown={e=>{if(e.key==="Enter"&&newName.trim()){onAdd(newName.trim());setNewName("");}}}
-            placeholder="New category name" style={{...inputStyle,flex:1}}/>
+            placeholder="new category name" style={{...inputStyle,flex:1}}/>
           <button onClick={()=>{if(newName.trim()){onAdd(newName.trim());setNewName("");}}}
-            style={{ padding:"13px 22px",background:"#7c5cfc",border:"none",borderRadius:10,color:"#fff",cursor:"pointer",fontSize:16,fontWeight:600 }}>
-            Add
+            style={{ padding:"11px 20px",background:GREEN,border:"none",color:"#0a0d0a",cursor:"pointer",fontSize:15,fontFamily:FONT_HEAD }}>
+            ADD
           </button>
         </div>
-        <div style={{ display:"flex",flexDirection:"column",gap:9,maxHeight:400,overflowY:"auto" }}>
+        <div style={{ display:"flex",flexDirection:"column",gap:8,maxHeight:380,overflowY:"auto" }}>
           {categories.map(c=>{
             const count=projects.filter(p=>p.categoryIds.includes(c.id)).length;
             return(
-              <div key={c.id} style={{ display:"flex",alignItems:"center",gap:8,background:"#0f1117",borderRadius:10,padding:"14px 16px" }}>
+              <div key={c.id} style={{ display:"flex",alignItems:"center",gap:8,background:BG,border:`1px solid ${BORDER}`,padding:"12px 14px" }}>
                 {editing===c.id?(
                   <input autoFocus defaultValue={c.name}
                     onBlur={e=>{onRename(c.id,e.target.value);setEditing(null);}}
                     onKeyDown={e=>{if(e.key==="Enter"){onRename(c.id,e.target.value);setEditing(null);}}}
-                    style={{...inputStyle,flex:1,padding:"7px 12px",fontSize:15}}/>
+                    style={{...inputStyle,flex:1,padding:"6px 10px",fontSize:17}}/>
                 ):(
-                  <span style={{ flex:1,color:"#fff",fontSize:16 }}>
-                    {c.name}<span style={{ color:"#4b5563",fontSize:14,marginLeft:10 }}>{count} projects</span>
+                  <span style={{ flex:1,color:TEXT,fontSize:19,fontFamily:FONT }}>
+                    {c.name}<span style={{ color:TEXT_DIM,fontSize:16,marginLeft:10 }}>{count} projects</span>
                   </span>
                 )}
-                <IconBtn onClick={()=>setEditing(c.id)}>{Icon.edit(16)}</IconBtn>
-                <IconBtn onClick={()=>onDelete(c.id)}>{Icon.trash(16)}</IconBtn>
+                <IconBtn onClick={()=>setEditing(c.id)}>{Icon.edit()}</IconBtn>
+                <IconBtn onClick={()=>onDelete(c.id)}>{Icon.trash()}</IconBtn>
               </div>
             );
           })}
@@ -513,17 +541,17 @@ function CategoryManager({ categories, projects, onAdd, onRename, onDelete, onCl
 function MultiFilter({ label, options, selected, onChange, colorMap }) {
   const all=selected.length===0;
   return (
-    <div style={{ marginBottom:24 }}>
-      <p style={{ color:"#4b5563",fontSize:12,fontWeight:700,margin:"0 0 9px",letterSpacing:1,textTransform:"uppercase" }}>{label}</p>
+    <div style={{ marginBottom:22 }}>
+      <p style={{ color:TEXT_DIM,fontSize:15,fontFamily:FONT,margin:"0 0 8px",letterSpacing:1,textTransform:"uppercase" }}>{label}</p>
       <div style={{ display:"flex",flexDirection:"column",gap:2 }}>
-        <FilterBtn active={all} color="#7c5cfc" onClick={()=>onChange([])}>All</FilterBtn>
+        <FilterBtn active={all} color={GREEN} onClick={()=>onChange([])}>all</FilterBtn>
         {options.map(o=>{
           const active=selected.includes(o);
-          const color=colorMap?colorMap[o]:"#7c5cfc";
+          const color=colorMap?colorMap[o]:GREEN;
           return(
             <FilterBtn key={o} active={active} color={color}
               onClick={()=>onChange(active?selected.filter(x=>x!==o):[...selected,o])}>
-              {active&&<span style={{ width:6,height:6,borderRadius:"50%",background:color,display:"inline-block",flexShrink:0 }}/>}
+              {active&&<span style={{ width:6,height:6,background:color,display:"inline-block",flexShrink:0 }}/>}
               {o}
             </FilterBtn>
           );
@@ -537,9 +565,9 @@ function FilterBtn({ active, color, onClick, children }) {
   return (
     <button onClick={onClick} style={{
       background:active?`${color}18`:"none",border:"none",
-      color:active?color:"#6b7280",textAlign:"left",padding:"9px 11px",
-      borderRadius:7,cursor:"pointer",fontSize:15,display:"flex",alignItems:"center",gap:8,
-      fontFamily:"Inter,sans-serif"
+      color:active?color:TEXT_DIM,textAlign:"left",padding:"7px 10px",
+      cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",gap:7,
+      fontFamily:FONT
     }}>{children}</button>
   );
 }
@@ -617,33 +645,36 @@ export default function App() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
         *{box-sizing:border-box;}
-        html,body,#root{margin:0;height:100%;background:#0f1117;}
+        html,body,#root{margin:0;height:100%;background:#0a0d0a;}
         ::-webkit-scrollbar{width:5px;}
         ::-webkit-scrollbar-track{background:transparent;}
-        ::-webkit-scrollbar-thumb{background:#1e2535;border-radius:3px;}
-        select option{background:#161b27;}
-        button{font-family:Inter,sans-serif;}
+        ::-webkit-scrollbar-thumb{background:#233024;}
+        select option{background:#10140f;}
+        body,input,select,textarea,button{letter-spacing:0.4px;}
+        button{font-family:'VT323',monospace;}
       `}</style>
 
-      <div style={{ display:"flex",height:"100vh",fontFamily:"'Inter',sans-serif",overflow:"hidden" }}>
+      <CRTOverlay/>
+
+      <div style={{ display:"flex",height:"100vh",fontFamily:FONT,overflow:"hidden" }}>
 
         {/* Sidebar */}
-        <aside style={{ width:SW,background:"#161b27",borderRight:"1px solid #1e2535",padding:"30px 20px",display:"flex",flexDirection:"column",flexShrink:0,overflowY:"auto" }}>
-          <div style={{ display:"flex",alignItems:"center",gap:11,marginBottom:4 }}>
-            <WheelLogo size={36}/>
-            <span style={{ color:"#fff",fontWeight:700,fontSize:19,fontFamily:"'Space Grotesk',sans-serif" }}>Project Wheel</span>
+        <aside style={{ width:SW,background:PANEL,borderRight:`1px solid ${BORDER}`,padding:"28px 18px",display:"flex",flexDirection:"column",flexShrink:0,overflowY:"auto" }}>
+          <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:4 }}>
+            <WheelLogo size={34}/>
+            <span style={{ color:GREEN,fontWeight:400,fontSize:14,fontFamily:FONT_HEAD,textShadow:`0 0 4px ${GREEN}` }}>PROJECT WHEEL</span>
           </div>
-          <p style={{ color:"#4b5563",fontSize:14,margin:"0 0 30px 47px" }}>{projects.length} projects</p>
+          <p style={{ color:TEXT_DIM,fontSize:17,margin:"0 0 26px 44px" }}>{projects.length} projects</p>
 
           {/* Nav */}
-          <div style={{ display:"flex",flexDirection:"column",gap:5,marginBottom:30 }}>
-            {[["wheel",Icon.wheel(19),"Spin the wheel"],["projects",Icon.grid(18),"Browse projects"]].map(([v,icon,label])=>(
+          <div style={{ display:"flex",flexDirection:"column",gap:4,marginBottom:26 }}>
+            {[["wheel",Icon.wheel(18),"spin the wheel"],["projects",Icon.grid(17),"browse projects"]].map(([v,icon,label])=>(
               <button key={v} onClick={()=>setView(v)} style={{
-                display:"flex",alignItems:"center",gap:11,padding:"13px 15px",borderRadius:10,border:"none",cursor:"pointer",fontSize:16,textAlign:"left",
-                background:view===v?"rgba(124,92,252,0.15)":"none",
-                color:view===v?"#7c5cfc":"#9ca3af",fontWeight:view===v?600:400,
+                display:"flex",alignItems:"center",gap:10,padding:"11px 14px",border:"none",cursor:"pointer",fontSize:18,textAlign:"left",
+                background:view===v?`${GREEN}18`:"none",
+                color:view===v?GREEN:TEXT_DIM,fontFamily:FONT,
               }}>
                 <span style={{ opacity: view===v?1:0.6 }}>{icon}</span>{label}
               </button>
@@ -651,23 +682,20 @@ export default function App() {
           </div>
 
           {/* Filters */}
-          <div style={{ borderTop:"1px solid #1e2535",paddingTop:24 }}>
-            <MultiFilter label="Category" options={categories.map(c=>c.name)} selected={filterCats} onChange={setFilterCats}/>
-            <MultiFilter label="Difficulty" options={DIFFICULTIES} selected={filterDiffs} onChange={setFilterDiffs} colorMap={DIFF_COLOR}/>
-            <MultiFilter label="Dev type" options={DEV_TYPES} selected={filterDevTypes} onChange={setFilterDevTypes}/>
-            <MultiFilter label="Status" options={STATUSES} selected={filterStatuses} onChange={setFilterStatuses} colorMap={STATUS_COLOR}/>
+          <div style={{ borderTop:`1px solid ${BORDER}`,paddingTop:20 }}>
+            <MultiFilter label="category" options={categories.map(c=>c.name)} selected={filterCats} onChange={setFilterCats}/>
+            <MultiFilter label="difficulty" options={DIFFICULTIES} selected={filterDiffs} onChange={setFilterDiffs} colorMap={DIFF_COLOR}/>
+            <MultiFilter label="dev type" options={DEV_TYPES} selected={filterDevTypes} onChange={setFilterDevTypes}/>
+            <MultiFilter label="status" options={STATUSES} selected={filterStatuses} onChange={setFilterStatuses} colorMap={STATUS_COLOR}/>
           </div>
 
           {/* Bottom actions */}
-          <div style={{ marginTop:"auto",paddingTop:22,borderTop:"1px solid #1e2535",display:"flex",flexDirection:"column",gap:9 }}>
-            <button onClick={()=>setShowAddProject(true)} style={{ display:"flex",alignItems:"center",gap:9,padding:"13px 15px",background:"#7c5cfc",border:"none",borderRadius:10,color:"#fff",fontSize:16,cursor:"pointer",fontWeight:500 }}>
-              {Icon.plus(17)} Add project
+          <div style={{ marginTop:"auto",paddingTop:18,borderTop:`1px solid ${BORDER}`,display:"flex",flexDirection:"column",gap:8 }}>
+            <button onClick={()=>setShowCatManager(true)} style={{ display:"flex",alignItems:"center",gap:8,padding:"12px 14px",background:"none",border:`1px solid ${BORDER}`,color:TEXT_DIM,fontSize:18,fontFamily:FONT,cursor:"pointer" }}>
+              {Icon.settings(16)} manage categories
             </button>
-            <button onClick={()=>setShowCatManager(true)} style={{ display:"flex",alignItems:"center",gap:9,padding:"13px 15px",background:"#1e2535",border:"none",borderRadius:10,color:"#9ca3af",fontSize:16,cursor:"pointer" }}>
-              {Icon.settings(17)} Manage categories
-            </button>
-            <button onClick={()=>supabase.auth.signOut()} style={{ display:"flex",alignItems:"center",gap:9,padding:"13px 15px",background:"none",border:"none",borderRadius:10,color:"#4b5563",fontSize:16,cursor:"pointer" }}>
-              {Icon.signout(17)} Sign out
+            <button onClick={()=>supabase.auth.signOut()} style={{ display:"flex",alignItems:"center",gap:8,padding:"12px 14px",background:"none",border:"none",color:TEXT_DIM,fontSize:18,fontFamily:FONT,cursor:"pointer" }}>
+              {Icon.signout(16)} sign out
             </button>
           </div>
         </aside>
@@ -676,12 +704,12 @@ export default function App() {
         <main style={{ flex:1,display:"flex",flexDirection:"column",overflow:"hidden",minHeight:0 }}>
 
           {view==="wheel"&&(
-            <div style={{ flex:1,minHeight:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"28px 40px",gap:24,overflow:"hidden" }}>
+            <div style={{ flex:1,minHeight:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"28px 40px",gap:22,overflow:"hidden" }}>
               <div style={{ textAlign:"center",flexShrink:0 }}>
-                <h1 style={{ color:"#fff",fontSize:36,fontFamily:"'Space Grotesk',sans-serif",margin:"0 0 8px",fontWeight:700 }}>
-                  What should you build next?
+                <h1 style={{ color:GREEN,fontSize:20,fontFamily:FONT_HEAD,margin:"0 0 10px",textShadow:`0 0 6px ${GREEN}`,lineHeight:1.5 }}>
+                  WHAT SHOULD YOU BUILD NEXT?
                 </h1>
-                <p style={{ color:"#6b7280",fontSize:16,margin:0 }}>
+                <p style={{ color:TEXT_DIM,fontSize:19,margin:0 }}>
                   {filtered.length} projects in the pool
                 </p>
               </div>
@@ -690,21 +718,26 @@ export default function App() {
           )}
 
           {view==="projects"&&(
-            <div style={{ flex:1,overflowY:"auto",padding:"34px 42px" }}>
-              <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:30 }}>
+            <div style={{ flex:1,overflowY:"auto",padding:"32px 40px" }}>
+              <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:26 }}>
                 <div>
-                  <h1 style={{ color:"#fff",fontSize:28,fontFamily:"'Space Grotesk',sans-serif",margin:"0 0 5px" }}>Projects</h1>
-                  <p style={{ color:"#6b7280",fontSize:15,margin:0 }}>Showing {filtered.length} of {projects.length}</p>
+                  <h1 style={{ color:GREEN,fontSize:17,fontFamily:FONT_HEAD,margin:"0 0 8px",textShadow:`0 0 4px ${GREEN}` }}>PROJECTS</h1>
+                  <p style={{ color:TEXT_DIM,fontSize:18,margin:0 }}>showing {filtered.length} of {projects.length}</p>
                 </div>
-                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…"
-                  style={{...inputStyle,width:280}}/>
+                <div style={{ display:"flex",gap:12 }}>
+                  <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="search…"
+                    style={{...inputStyle,width:220}}/>
+                  <button onClick={()=>setShowAddProject(true)} style={{ display:"flex",alignItems:"center",gap:8,padding:"11px 18px",background:GREEN,border:"none",color:"#0a0d0a",fontSize:15,fontFamily:FONT_HEAD,cursor:"pointer",whiteSpace:"nowrap" }}>
+                    {Icon.plus(15)} ADD
+                  </button>
+                </div>
               </div>
-              <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(400px,1fr))",gap:16 }}>
+              <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(380px,1fr))",gap:14 }}>
                 {filtered.map(p=>(
                   <ProjectCard key={p.id} project={p} categories={categories} onEdit={setEditProject} onDelete={deleteProject}/>
                 ))}
                 {filtered.length===0&&(
-                  <p style={{ color:"#6b7280",gridColumn:"1/-1",fontSize:16 }}>No projects match. Adjust your filters.</p>
+                  <p style={{ color:TEXT_DIM,gridColumn:"1/-1",fontSize:19 }}>no projects match. adjust your filters.</p>
                 )}
               </div>
             </div>
