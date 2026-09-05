@@ -20,6 +20,7 @@ create table projects (
   dev_type text check (dev_type in ('Manual', 'Assisted')) not null default 'Assisted',
   status text check (status in ('idea', 'doing', 'completed')) not null default 'idea',
   link text,
+  has_content boolean not null default false,
   owner_id uuid references auth.users(id) default auth.uid() not null,
   created_at timestamptz default now(),
   updated_at timestamptz default now()

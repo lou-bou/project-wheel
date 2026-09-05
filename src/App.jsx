@@ -8,6 +8,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DIFFICULTIES = ["Easy", "Medium", "Hard", "Expert"];
 const DEV_TYPES    = ["Manual", "Assisted"];
 const STATUSES     = ["idea", "doing", "completed"];
+const CONTENT_OPTIONS = ["Made", "Not made"];
 
 // ── Arcade CRT palette ─────────────────────────────────────────────────────
 const BG        = "#0a0d0a";
@@ -22,6 +23,7 @@ const HOT       = "#ff2ecb";
 
 const DIFF_COLOR = { Easy: "#39ff88", Medium: "#f0c419", Hard: "#ff8b3d", Expert: "#ff4d4d" };
 const STATUS_COLOR = { idea: "#5c7a63", doing: "#22d3ee", completed: "#39ff88" };
+const CONTENT_COLOR = { Made: "#39ff88", "Not made": "#5c7a63" };
 const PALETTE = ["#39ff88","#0d4d2b","#f0c419","#1e7a45","#2ecc71","#166534","#a8e6b8","#0a3d1f"];
 
 function readableTextColor(hex) {
@@ -165,6 +167,21 @@ function AuthScreen() {
   }
 
   return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+        *{box-sizing:border-box;}
+        html,body,#root{margin:0;height:100%;background:#0a0d0a;}
+        html{color-scheme:dark;}
+        input,select,textarea,button{outline:none;}
+        input:focus,select:focus,textarea:focus{outline:none;border-color:#39ff88;}
+        input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+          -webkit-text-fill-color:#d7ffe0;
+          -webkit-box-shadow:0 0 0px 1000px #0a0d0a inset;
+          transition:background-color 9999s ease-in-out 0s;
+        }
+        button{font-family:'VT323',monospace;}
+      `}</style>
     <div style={{ minHeight:"100vh", background:BG, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:FONT }}>
       <div style={{ background:PANEL, border:`2px solid ${BORDER}`, padding:"48px 40px", width:420, textAlign:"center" }}>
         <div style={{ display:"flex", justifyContent:"center", marginBottom:20 }}><WheelLogo size={56}/></div>
@@ -195,6 +212,7 @@ function AuthScreen() {
         )}
       </div>
     </div>
+    </>
   );
 }
 
@@ -385,6 +403,7 @@ function ProjectCard({ project, categories, onEdit, onDelete }) {
         <Badge color={STATUS_COLOR[project.status]}>{project.status}</Badge>
         <Badge color={DIFF_COLOR[project.difficulty]}>{project.difficulty}</Badge>
         <Badge color={TEXT_DIM}>{project.dev_type}</Badge>
+        <Badge color={project.has_content?CONTENT_COLOR.Made:CONTENT_COLOR["Not made"]}>{project.has_content?"content made":"no content"}</Badge>
         {catNames.map(c=><Badge key={c} color={TEXT_DIM}>{c}</Badge>)}
       </div>
       {project.status==="completed"&&project.link&&(
@@ -409,7 +428,7 @@ function IconBtn({ onClick, children }) {
 
 // ── Project Form ──────────────────────────────────────────────────────────────
 function ProjectFormModal({ project, categories, onSave, onClose }) {
-  const [form, setForm]=useState(project||{ name:"",description:"",difficulty:"Medium",dev_type:"Assisted",status:"idea",link:"",categoryIds:[] });
+  const [form, setForm]=useState(project||{ name:"",description:"",difficulty:"Medium",dev_type:"Assisted",status:"idea",link:"",has_content:false,categoryIds:[] });
   const [loading,setLoading]=useState(false);
   function set(k,v){setForm(f=>({...f,[k]:v}));}
   function toggleCat(id){setForm(f=>({...f,categoryIds:f.categoryIds.includes(id)?f.categoryIds.filter(c=>c!==id):[...f.categoryIds,id]}));}
@@ -423,7 +442,7 @@ function ProjectFormModal({ project, categories, onSave, onClose }) {
         <div style={{ display:"flex",flexDirection:"column",gap:18 }}>
           <Field label="name"><input value={form.name} onChange={e=>set("name",e.target.value)} style={inputStyle}/></Field>
           <Field label="description"><textarea value={form.description} onChange={e=>set("description",e.target.value)} rows={3} style={{...inputStyle,resize:"vertical"}}/></Field>
-          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14 }}>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:14 }}>
             <Field label="difficulty">
               <SelectField value={form.difficulty} onChange={e=>set("difficulty",e.target.value)} options={DIFFICULTIES}/>
             </Field>
@@ -432,6 +451,9 @@ function ProjectFormModal({ project, categories, onSave, onClose }) {
             </Field>
             <Field label="status">
               <SelectField value={form.status} onChange={e=>set("status",e.target.value)} options={STATUSES}/>
+            </Field>
+            <Field label="content">
+              <SelectField value={form.has_content?"Made":"Not made"} onChange={e=>set("has_content",e.target.value==="Made")} options={CONTENT_OPTIONS}/>
             </Field>
           </div>
           {form.status==="completed"&&(
@@ -584,6 +606,7 @@ export default function App() {
   const [filterDiffs,setFilterDiffs]=useState([]);
   const [filterDevTypes,setFilterDevTypes]=useState([]);
   const [filterStatuses,setFilterStatuses]=useState([]);
+  const [filterContent,setFilterContent]=useState([]);
   const [result,setResult]=useState(null);
   const [editProject,setEditProject]=useState(null);
   const [showCatManager,setShowCatManager]=useState(false);
@@ -609,6 +632,7 @@ export default function App() {
     if(filterDiffs.length&&!filterDiffs.includes(p.difficulty)) return false;
     if(filterDevTypes.length&&!filterDevTypes.includes(p.dev_type)) return false;
     if(filterStatuses.length&&!filterStatuses.includes(p.status)) return false;
+    if(filterContent.length&&!filterContent.some(f=>(f==="Made")===!!p.has_content)) return false;
     if(search&&!p.name.toLowerCase().includes(search.toLowerCase())&&!(p.description||"").toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -648,6 +672,14 @@ export default function App() {
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
         *{box-sizing:border-box;}
         html,body,#root{margin:0;height:100%;background:#0a0d0a;}
+        html{color-scheme:dark;}
+        input,select,textarea,button{outline:none;}
+        input:focus,select:focus,textarea:focus{outline:none;border-color:#39ff88;}
+        input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+          -webkit-text-fill-color:#d7ffe0;
+          -webkit-box-shadow:0 0 0px 1000px #0a0d0a inset;
+          transition:background-color 9999s ease-in-out 0s;
+        }
         ::-webkit-scrollbar{width:5px;}
         ::-webkit-scrollbar-track{background:transparent;}
         ::-webkit-scrollbar-thumb{background:#233024;}
@@ -687,6 +719,7 @@ export default function App() {
             <MultiFilter label="difficulty" options={DIFFICULTIES} selected={filterDiffs} onChange={setFilterDiffs} colorMap={DIFF_COLOR}/>
             <MultiFilter label="dev type" options={DEV_TYPES} selected={filterDevTypes} onChange={setFilterDevTypes}/>
             <MultiFilter label="status" options={STATUSES} selected={filterStatuses} onChange={setFilterStatuses} colorMap={STATUS_COLOR}/>
+            <MultiFilter label="content" options={CONTENT_OPTIONS} selected={filterContent} onChange={setFilterContent} colorMap={CONTENT_COLOR}/>
           </div>
 
           {/* Bottom actions */}
