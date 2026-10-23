@@ -1,9 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const DIFFICULTIES = ["Easy", "Medium", "Hard", "Expert"];
 const DEV_TYPES    = ["Manual", "Assisted"];
@@ -76,12 +71,6 @@ const Icon = {
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
     </svg>
   ),
-  signout: (sz=16) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-      <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-    </svg>
-  ),
   chevronDown: (sz=14) => (
     <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter">
       <polyline points="6 9 12 15 18 9"/>
@@ -115,23 +104,18 @@ function WheelLogo({ size = 32 }) {
   );
 }
 
-// ── Supabase helpers ─────────────────────────────────────────────────────────
-async function fetchAll() {
-  const [{ data: projects }, { data: categories }, { data: pc }] = await Promise.all([
-    supabase.from("projects").select("*").order("name"),
-    supabase.from("categories").select("*").order("name"),
-    supabase.from("project_categories").select("*"),
-  ]);
-  const catMap = {};
-  (pc || []).forEach(({ project_id, category_id }) => {
-    if (!catMap[project_id]) catMap[project_id] = [];
-    catMap[project_id].push(category_id);
+// ── API helpers ──────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const res = await fetch(`/api${path}`, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
   });
-  return {
-    projects: (projects || []).map((p) => ({ ...p, categoryIds: catMap[p.id] || [] })),
-    categories: categories || [],
-  };
+  if (!res.ok) throw new Error(`${method} ${path} failed: ${res.status}`);
+  return res.status === 204 ? null : res.json();
 }
+
+const fetchAll = () => api("GET", "/data");
 
 // ── CRT overlay (scanlines + vignette) ──────────────────────────────────────
 function CRTOverlay() {
@@ -142,77 +126,6 @@ function CRTOverlay() {
       boxShadow:"inset 0 0 160px rgba(0,0,0,0.7)",
       mixBlendMode:"multiply"
     }}/>
-  );
-}
-
-// ── Auth Screen ───────────────────────────────────────────────────────────────
-function AuthScreen() {
-  const [mode, setMode]   = useState("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [err, setErr]     = useState("");
-  const [signedUp, setSignedUp] = useState(false);
-
-  async function handleSubmit() {
-    setLoading(true); setErr("");
-    if (mode === "signin") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setErr(error.message);
-    } else {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) setErr(error.message); else setSignedUp(true);
-    }
-    setLoading(false);
-  }
-
-  return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
-        *{box-sizing:border-box;}
-        html,body,#root{margin:0;height:100%;background:#0a0d0a;}
-        html{color-scheme:dark;}
-        input,select,textarea,button{outline:none;}
-        input:focus,select:focus,textarea:focus{outline:none;border-color:#39ff88;}
-        input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
-          -webkit-text-fill-color:#d7ffe0;
-          -webkit-box-shadow:0 0 0px 1000px #0a0d0a inset;
-          transition:background-color 9999s ease-in-out 0s;
-        }
-        button{font-family:'VT323',monospace;}
-      `}</style>
-    <div style={{ minHeight:"100vh", background:BG, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:FONT }}>
-      <div style={{ background:PANEL, border:`2px solid ${BORDER}`, padding:"48px 40px", width:420, textAlign:"center" }}>
-        <div style={{ display:"flex", justifyContent:"center", marginBottom:20 }}><WheelLogo size={56}/></div>
-        <h1 style={{ color:GREEN, fontSize:18, fontFamily:FONT_HEAD, margin:"0 0 10px", textShadow:`0 0 6px ${GREEN}` }}>PROJECT WHEEL</h1>
-        <p style={{ color:TEXT_DIM, fontSize:21, margin:"0 0 30px" }}>&gt; pick what to build next</p>
-        {signedUp ? (
-          <p style={{ color:GREEN, fontSize:21 }}>Account created — check your email to confirm, then sign in.</p>
-        ) : (
-          <>
-            <input type="email" placeholder="your@email.com" value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{ width:"100%", boxSizing:"border-box", padding:"12px 14px", background:BG, border:`1px solid ${BORDER}`, color:TEXT, fontSize:20, fontFamily:FONT, outline:"none", marginBottom:12 }}
-            />
-            <input type="password" placeholder="password" value={password}
-              onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key==="Enter" && handleSubmit()}
-              style={{ width:"100%", boxSizing:"border-box", padding:"12px 14px", background:BG, border:`1px solid ${BORDER}`, color:TEXT, fontSize:20, fontFamily:FONT, outline:"none", marginBottom:12 }}
-            />
-            {err && <p style={{ color:"#ff4d4d", fontSize:17, marginBottom:10 }}>{err}</p>}
-            <button onClick={handleSubmit} disabled={loading||!email||!password}
-              style={{ width:"100%", padding:"13px", background:GREEN, border:"none", color:"#0a0d0a", fontSize:16, fontFamily:FONT_HEAD, cursor:"pointer", opacity:loading||!email||!password?0.5:1, marginBottom:18 }}>
-              {loading ? "..." : mode==="signin" ? "SIGN IN" : "CREATE ACCOUNT"}
-            </button>
-            <button onClick={()=>{setMode(mode==="signin"?"signup":"signin");setErr("");}}
-              style={{ background:"none", border:"none", color:TEXT_DIM, fontSize:18, fontFamily:FONT, cursor:"pointer", textDecoration:"underline" }}>
-              {mode==="signin" ? "need an account? sign up" : "already have an account? sign in"}
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-    </>
   );
 }
 
@@ -596,8 +509,6 @@ function FilterBtn({ active, color, onClick, children }) {
 
 // ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [session,setSession]=useState(null);
-  const [authChecked,setAuthChecked]=useState(false);
   const [projects,setProjects]=useState([]);
   const [categories,setCategories]=useState([]);
   const [view,setView]=useState("wheel");
@@ -612,17 +523,11 @@ export default function App() {
   const [showCatManager,setShowCatManager]=useState(false);
   const [showAddProject,setShowAddProject]=useState(false);
 
-  useEffect(()=>{
-    supabase.auth.getSession().then(({data:{session}})=>{setSession(session);setAuthChecked(true);});
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));
-    return ()=>subscription.unsubscribe();
-  },[]);
-
   const load=useCallback(async()=>{
     const data=await fetchAll();setProjects(data.projects);setCategories(data.categories);
   },[]);
 
-  useEffect(()=>{if(session)load();},[session]);
+  useEffect(()=>{load();},[load]);
 
   const filtered=projects.filter(p=>{
     if(filterCats.length){
@@ -640,29 +545,19 @@ export default function App() {
   async function saveProject(form){
     const {categoryIds,...fields}=form;
     if(!fields.link||fields.status!=="completed") fields.link=null;
-    if(fields.id){
-      await supabase.from("projects").update(fields).eq("id",fields.id);
-      await supabase.from("project_categories").delete().eq("project_id",fields.id);
-    } else {
-      const {data}=await supabase.from("projects").insert(fields).select().single();
-      fields.id=data.id;
-    }
-    if(categoryIds?.length) await supabase.from("project_categories").insert(categoryIds.map(cid=>({project_id:fields.id,category_id:cid})));
+    if(fields.id) await api("PATCH",`/projects/${fields.id}`,{...fields,categoryIds});
+    else await api("POST","/projects",{...fields,categoryIds});
     setEditProject(null);setShowAddProject(false);load();
   }
 
-  async function deleteProject(id){if(!confirm("Delete this project?"))return;await supabase.from("projects").delete().eq("id",id);load();}
-  async function acceptResult(p){await supabase.from("projects").update({status:"doing"}).eq("id",p.id);setResult(null);load();}
-  async function addCategory(name){await supabase.from("categories").insert({name});load();}
-  async function renameCategory(id,name){await supabase.from("categories").update({name}).eq("id",id);load();}
+  async function deleteProject(id){if(!confirm("Delete this project?"))return;await api("DELETE",`/projects/${id}`);load();}
+  async function acceptResult(p){await api("PATCH",`/projects/${p.id}`,{status:"doing"});setResult(null);load();}
+  async function addCategory(name){await api("POST","/categories",{name});load();}
+  async function renameCategory(id,name){await api("PATCH",`/categories/${id}`,{name});load();}
   async function deleteCategory(id){
     if(!confirm("Remove this category? Projects won't be deleted."))return;
-    await supabase.from("project_categories").delete().eq("category_id",id);
-    await supabase.from("categories").delete().eq("id",id);load();
+    await api("DELETE",`/categories/${id}`);load();
   }
-
-  if(!authChecked) return null;
-  if(!session) return <AuthScreen/>;
 
   const SW=290;
 
@@ -726,9 +621,6 @@ export default function App() {
           <div style={{ marginTop:"auto",paddingTop:18,borderTop:`1px solid ${BORDER}`,display:"flex",flexDirection:"column",gap:8 }}>
             <button onClick={()=>setShowCatManager(true)} style={{ display:"flex",alignItems:"center",gap:8,padding:"12px 14px",background:"none",border:`1px solid ${BORDER}`,color:TEXT_DIM,fontSize:18,fontFamily:FONT,cursor:"pointer" }}>
               {Icon.settings(16)} manage categories
-            </button>
-            <button onClick={()=>supabase.auth.signOut()} style={{ display:"flex",alignItems:"center",gap:8,padding:"12px 14px",background:"none",border:"none",color:TEXT_DIM,fontSize:18,fontFamily:FONT,cursor:"pointer" }}>
-              {Icon.signout(16)} sign out
             </button>
           </div>
         </aside>
