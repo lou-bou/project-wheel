@@ -1,6 +1,8 @@
-# Project Wheel
+# Whirl
 
-A personal tool for managing a backlog of project ideas and spinning a wheel to pick what to build next. Filter by category, difficulty, dev type, status or content before spinning, track status (idea → doing → completed), and browse the full list.
+A backlog of project ideas and a wheel that picks what to build next. Filter by category, difficulty, dev type, status or content, spin, and track each idea from Idea to Doing to Completed on a board.
+
+Formerly Project Wheel. The repo folder, the `project-wheel` systemd service and the `wheel.boussaid.me` address kept the old name, because renaming them would mean changing the server setup.
 
 Live at **https://wheel.boussaid.me**, self-hosted on the ThinkPad home server.
 
@@ -25,14 +27,16 @@ Previously ran on Vercel + Supabase; moved to the home server in October 2026.
 
 | Path | What it is |
 |---|---|
-| `src/App.jsx` | The whole frontend |
-| `src/tokens.css` | Every colour, font and radius, with dark mode overrides (see `DESIGN.md`) |
-| `src/app.css` | Component styles, including the phone layout (`max-width: 700px`) |
+| `src/App.jsx` | App state and the Backlog, Board, Settings and idea detail screens |
+| `src/Wheel.jsx` | The SVG wheel and its spin |
+| `src/markdown.jsx` | Small safe renderer for description previews |
+| `src/tokens.css` | Every colour, font, size and radius, from the brand kit (see `DESIGN.md`) |
+| `src/app.css` | Component styles; phones first, desktop from 900px wide |
 | `src/offline.js` | API calls, the saved copy of the data, and the device queue |
 | `src/sw.template.js` | Service worker; `vite.config.js` turns it into `dist/sw.js` on build |
-| `public/icons/` | App icons, rendered once from `public/favicon.svg` and committed |
-| `public/fonts/` | Inter and Nunito, stored here so they work offline |
-| `DESIGN.md` | The theme and the reasons behind its decisions |
+| `public/icons/`, `public/logo/` | App icons and logo from the brand kit |
+| `public/fonts/` | Bricolage Grotesque, DM Sans and JetBrains Mono, stored here so they work offline |
+| `DESIGN.md` | The design spec, plus the decisions made where it had gaps |
 | `server/index.js` | API + static file server |
 | `Schema.sql` | Database tables; run once on a fresh database |
 | `scripts/import-from-supabase.sh` | One-time copy of data from the old Supabase project (already done) |
@@ -54,10 +58,10 @@ All requests and responses are JSON.
 
 ## Phone app and offline
 
-The site can be installed from the browser (Add to Home Screen) and has a phone layout under 700px wide.
+The site can be installed from the browser (Add to Home Screen) and has a phone layout under 900px wide.
 
 - **Viewing and spinning** work offline from a copy of the data saved on the device.
-- **Project changes** (add, edit, status, delete) go into a queue on the device and are shown as "saved on this device" until the server confirms them. They're sent on load, when the connection returns and every 30 seconds. If two devices edit the same field, the last one sent wins.
+- **Project changes** (add, edit, status, delete) go into a queue on the device and are shown as "Saved on this device" until the server confirms them. They're sent on load, when the connection returns and every 30 seconds. If two devices edit the same field, the last one sent wins.
 - **Category changes** need a connection, because queued projects can point at categories.
 - The service worker never caches `/api`. The laptop being down counts as offline, because Cloudflare answers with a 5xx page.
 

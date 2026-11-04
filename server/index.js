@@ -1,4 +1,4 @@
-// Project Wheel API + static file server.
+// Whirl API + static file server.
 // Auth is handled in front of this by Cloudflare Access, so it binds to localhost only.
 import express from "express";
 import pg from "pg";
@@ -17,7 +17,7 @@ app.use("/api", (_req, res, next) => {
   next();
 });
 
-const PROJECT_FIELDS = ["name", "description", "difficulty", "dev_type", "status", "link", "has_content"];
+const PROJECT_FIELDS = ["name", "description", "difficulty", "dev_type", "status", "link", "has_content", "notes"];
 
 function pickFields(body, allowed = PROJECT_FIELDS) {
   return allowed.filter((k) => k in body).map((k) => [k, body[k]]);
@@ -144,4 +144,7 @@ app.get("/{*path}", (req, res) => {
   res.sendFile(path.join(DIST, "index.html"));
 });
 
-app.listen(PORT, HOST, () => console.log(`Project Wheel on http://${HOST}:${PORT}`));
+// Databases made before the notes field existed get it on the next start
+await pool.query("alter table projects add column if not exists notes text");
+
+app.listen(PORT, HOST, () => console.log(`Whirl on http://${HOST}:${PORT}`));

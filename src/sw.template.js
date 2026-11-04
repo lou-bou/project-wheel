@@ -1,11 +1,11 @@
-/* Project Wheel service worker. vite.config.js fills in VERSION and PRECACHE at build time.
+/* Whirl service worker. vite.config.js fills in VERSION and PRECACHE at build time.
  * Network first, so changes show up at once; the saved copy is the fallback when the network
  * fails, stalls or the laptop is down. /api is never cached: the app keeps its own saved copy.
  * A redirect to the Cloudflare Access login passes straight through, so an expired session
  * still reaches the login page. */
 const VERSION = "%%VERSION%%";
 const PRECACHE = %%PRECACHE%%;
-const CACHE = `wheel-${VERSION}`;
+const CACHE = `whirl-${VERSION}`;
 const TIMEOUT_MS = 3500;
 
 function storable(r) {
@@ -23,7 +23,7 @@ self.addEventListener("install", (e) => {
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys()
-    .then((names) => Promise.all(names.filter((n) => n.startsWith("wheel-") && n !== CACHE).map((n) => caches.delete(n))))
+    .then((names) => Promise.all(names.filter((n) => /^(whirl|wheel)-/.test(n) && n !== CACHE).map((n) => caches.delete(n))))
     .then(() => self.clients.claim()));
 });
 
@@ -31,7 +31,7 @@ function offlinePage() {
   return new Response(
     '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>Offline</title><body style="color-scheme:light dark;background:Canvas;color:CanvasText;font:16px system-ui,sans-serif;text-align:center;padding:64px 24px">' +
-    '<h1 style="font-size:1.4rem">You are offline</h1><p>Project Wheel needs a connection the first time it opens.</p><p><a href="/">Try again</a></p>',
+    '<h1 style="font-size:1.4rem">You are offline</h1><p>Whirl needs a connection the first time it opens.</p><p><a href="/">Try again</a></p>',
     { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 

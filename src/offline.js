@@ -1,8 +1,17 @@
 // Talks to the API and keeps the app usable offline: the last data from the server is saved on
 // the device, and project changes wait in a device queue until the server confirms them.
-const DATA_KEY = "wheel.data";
-const QUEUE_KEY = "wheel.queue";
+const DATA_KEY = "whirl.data";
+const QUEUE_KEY = "whirl.queue";
 const REQUEST_TIMEOUT_MS = 8000;
+
+// Keep changes still waiting on a device from before the rename to Whirl
+for (const [from, to] of [["wheel.data", DATA_KEY], ["wheel.queue", QUEUE_KEY]]) {
+  try {
+    const old = localStorage.getItem(from);
+    if (old !== null && localStorage.getItem(to) === null) localStorage.setItem(to, old);
+    localStorage.removeItem(from);
+  } catch { /* storage blocked */ }
+}
 
 export class OfflineError extends Error {}
 export class LoginError extends Error {}

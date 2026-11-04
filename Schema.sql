@@ -1,5 +1,5 @@
 -- ─────────────────────────────────────────────
--- Project Wheel — Postgres Schema
+-- Whirl — Postgres Schema
 -- Run once on a fresh database:  psql "$DATABASE_URL" -f Schema.sql
 -- ─────────────────────────────────────────────
 
@@ -20,6 +20,7 @@ create table projects (
   status text check (status in ('idea', 'doing', 'completed')) not null default 'idea',
   link text,
   has_content boolean not null default false,
+  notes text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

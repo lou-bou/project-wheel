@@ -1,93 +1,109 @@
-/* tokens: every colour, font, radius and shadow in the app lives here. See DESIGN.md. */
-@font-face { font-family: Inter; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/fonts/inter-latin-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: Inter; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/fonts/inter-latin-ext-wght-normal.woff2) format("woff2-variations"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+A720-A7FF; }
-@font-face { font-family: Nunito; font-style: normal; font-weight: 800; font-display: swap; src: url(/fonts/nunito-latin-800-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: Nunito; font-style: normal; font-weight: 800; font-display: swap; src: url(/fonts/nunito-latin-ext-800-normal.woff2) format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+A720-A7FF; }
+/* Whirl design tokens. Dark is the default theme; light is opt-in.
+   Theme switch: <html data-theme="light|dark">; no attribute = follow the OS. */
 
 :root {
-  color-scheme: light;
+  /* Brand (theme-independent) */
+  --brand-amber: #F5B82E;
+  --brand-coral: #F2613F;
+  --brand-teal:  #2BB3A3;
+  --brand-ink:   #1F2430;
+  --brand-cream: #FFF4E0;
 
-  /* neutrals */
-  --bg: #f6f5f2;
-  --surface: #ffffff;
-  --sunken: #efede8;
-  --hover: #f2f0ec;
-  --line: #e4e1da;
-  --line-strong: #cdc9c0;
-  --ink: #1c1b19;
-  --muted: #6b675f;
+  /* Status — the logo's three colors ARE the status system */
+  --status-idea:       var(--brand-amber);
+  --status-doing:      var(--brand-coral);
+  --status-completed:  var(--brand-teal);
+  --status-on-color:   var(--brand-ink);   /* text on any status fill */
 
-  /* the one accent: a fill with dark text on it, and a readable form for text and strokes */
-  --accent-fill: #f2a922;
-  --accent-fill-hover: #e39912;
-  --on-accent: #2a1d04;
-  --accent: #8a5a00;
-  --accent-soft: #fdf0d5;
+  /* Wheel segments cycle these in order */
+  --wheel-1: var(--brand-amber);
+  --wheel-2: var(--brand-coral);
+  --wheel-3: var(--brand-teal);
 
-  /* meaning only */
-  --ok: #1d8049;
-  --ok-soft: #e2f2e8;
-  --hi: #c2413a;
-  --hi-soft: #f8e4e1;
-  --hard: #b4541a;
+  /* Type */
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body:    "DM Sans", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, monospace;
 
-  /* wheel slices only, dark text on all of them */
-  --slice-1: #f5c56a;
-  --slice-2: #e9a88e;
-  --slice-3: #a9d0a6;
-  --slice-4: #d3c7b5;
-  --on-slice: #2a1d04;
+  --text-xs: 0.75rem;   /* 12 */
+  --text-sm: 0.875rem;  /* 14 */
+  --text-md: 1rem;      /* 16 body */
+  --text-lg: 1.25rem;   /* 20 */
+  --text-xl: 1.75rem;   /* 28 */
+  --text-2xl: 2.5rem;   /* 40 spin result */
 
-  /* floating layers */
-  --shadow: 0 8px 28px rgba(40, 32, 16, 0.16);
-  --scrim: rgba(28, 27, 25, 0.45);
+  /* Spacing (4px grid) */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px;
 
-  /* type */
-  --font: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: Nunito, Inter, system-ui, sans-serif;
-  --text-2xs: 0.6875rem;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.375rem;
-  --text-2xl: 1.75rem;
+  /* Shape */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
 
-  /* shape */
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 18px;
-  --r-xl: 24px;
-  --r-pill: 999px;
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-med: 220ms;
+  --spin-duration: 3800ms;
+  --spin-ease: cubic-bezier(0.12, 0.7, 0.12, 1);
 
-  /* motion */
-  --fast: 120ms;
-  --ease: cubic-bezier(.2, .8, .2, 1);
-
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-top: env(safe-area-inset-top, 0px);
+  /* Dark (default) */
+  --bg:         #17191F;
+  --surface:    #1F2430;
+  --surface-2:  #282E3B;
+  --border:     #343B4A;
+  --text:       #F4EFE6;
+  --text-muted: #A7A9B3;
+  --focus:      var(--brand-amber);
+  --danger:     #FF7A6B;
+  color-scheme: dark;
 }
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #121211;
-  --surface: #1b1a18;
-  --sunken: #0e0e0d;
-  --hover: #23221f;
-  --line: #2c2a27;
-  --line-strong: #3d3a35;
-  --ink: #f1efea;
-  --muted: #a39f96;
-  --accent-fill: #f5b13a;
-  --accent-fill-hover: #f8c160;
-  --on-accent: #2a1d04;
-  --accent: #f5b13a;
-  --accent-soft: #33270f;
-  --ok: #4cbd78;
-  --ok-soft: #142b1d;
-  --hi: #ec6b61;
-  --hi-soft: #361816;
-  --hard: #f08a4b;
-  --shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
-  --scrim: rgba(0, 0, 0, 0.6);
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:         #FBF7F0;
+    --surface:    #FFFFFF;
+    --surface-2:  #F3EDE3;
+    --border:     #E4DCCF;
+    --text:       #1F2430;
+    --text-muted: #5F6472;
+    --focus:      #C2410C;
+    --danger:     #C2372A;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg:         #FBF7F0;
+  --surface:    #FFFFFF;
+  --surface-2:  #F3EDE3;
+  --border:     #E4DCCF;
+  --text:       #1F2430;
+  --text-muted: #5F6472;
+  --focus:      #C2410C;
+  --danger:     #C2372A;
+  color-scheme: light;
+}
+
+/* ── App additions: values the kit didn't cover ─────────────────────────── */
+:root {
+  --pointer: var(--brand-cream);  /* logo and wheel pointer + hub: cream on dark, ink on light */
+  --scrim: rgb(0 0 0 / 0.55);
+  --shadow-float: none;           /* no shadows in dark mode */
+  --nav-height: 64px;
+  --tap: 44px;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --pointer: var(--brand-ink);
+    --scrim: rgb(31 36 48 / 0.4);
+    --shadow-float: 0 8px 24px rgb(31 36 48 / 0.12);
+  }
+}
+:root[data-theme="light"] {
+  --pointer: var(--brand-ink);
+  --scrim: rgb(31 36 48 / 0.4);
+  --shadow-float: 0 8px 24px rgb(31 36 48 / 0.12);
 }

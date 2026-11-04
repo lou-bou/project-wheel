@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Whirl">
+  <path d="M80 86 L80 24 A62 62 0 0 1 133.69 55 Z" fill="#F5B82E"/>
+  <path d="M80 86 L133.69 55 A62 62 0 0 1 133.69 117 Z" fill="#F2613F"/>
+  <path d="M80 86 L133.69 117 A62 62 0 0 1 80 148 Z" fill="#2BB3A3"/>
+  <path d="M80 86 L80 148 A62 62 0 0 1 26.31 117 Z" fill="#F5B82E"/>
+  <path d="M80 86 L26.31 117 A62 62 0 0 1 26.31 55 Z" fill="#F2613F"/>
+  <path d="M80 86 L26.31 55 A62 62 0 0 1 80 24 Z" fill="#2BB3A3"/>
+  <circle cx="80" cy="86" r="12" fill="#1F2430"/>
+  <polygon points="70,8 90,8 80,30" fill="#1F2430"/>
+</svg>
