@@ -12,11 +12,15 @@ const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "dist
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const app = express();
 app.use(express.json());
+app.use("/api", (_req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
 
 const PROJECT_FIELDS = ["name", "description", "difficulty", "dev_type", "status", "link", "has_content"];
 
-function pickFields(body) {
-  return PROJECT_FIELDS.filter((k) => k in body).map((k) => [k, body[k]]);
+function pickFields(body, allowed = PROJECT_FIELDS) {
+  return allowed.filter((k) => k in body).map((k) => [k, body[k]]);
 }
 
 async function withTransaction(fn) {
@@ -58,22 +62,26 @@ app.get("/api/data", async (_req, res) => {
 
 // ── Projects ────────────────────────────────────────────────────────────────
 app.post("/api/projects", async (req, res) => {
-  const fields = pickFields(req.body);
+  // The app picks the id, so replaying a queued create can't make a duplicate
+  const fields = pickFields(req.body, ["id", ...PROJECT_FIELDS]);
   const project = await withTransaction(async (client) => {
     const { rows } = await client.query(
       `insert into projects (${fields.map(([k]) => k).join(", ")})
-       values (${fields.map((_, i) => `$${i + 1}`).join(", ")}) returning *`,
+       values (${fields.map((_, i) => `$${i + 1}`).join(", ")})
+       on conflict (id) do nothing returning *`,
       fields.map(([, v]) => v),
     );
-    await setProjectCategories(client, rows[0].id, req.body.categoryIds || []);
+    if (rows[0]) await setProjectCategories(client, rows[0].id, req.body.categoryIds || []);
     return rows[0];
   });
-  res.status(201).json(project);
+  res.status(project ? 201 : 200).json(project ?? { id: req.body.id });
 });
 
 app.patch("/api/projects/:id", async (req, res) => {
   const fields = pickFields(req.body);
-  await withTransaction(async (client) => {
+  const found = await withTransaction(async (client) => {
+    const { rowCount } = await client.query("select 1 from projects where id = $1", [req.params.id]);
+    if (!rowCount) return false;
     if (fields.length) {
       await client.query(
         `update projects set ${fields.map(([k], i) => `${k} = $${i + 2}`).join(", ")} where id = $1`,
@@ -81,7 +89,9 @@ app.patch("/api/projects/:id", async (req, res) => {
       );
     }
     if (req.body.categoryIds) await setProjectCategories(client, req.params.id, req.body.categoryIds);
+    return true;
   });
+  if (!found) return res.status(404).json({ error: "this project no longer exists" });
   res.status(204).end();
 });
 
@@ -106,15 +116,32 @@ app.delete("/api/categories/:id", async (req, res) => {
   res.status(204).end();
 });
 
+app.use("/api", (_req, res) => res.status(404).json({ error: "not found" }));
+
+// Permanent failures get a 4xx so the app's device queue doesn't keep retrying them
+const REJECTED = {
+  23505: [409, "that name is already taken"],
+  23503: [409, "a category it uses no longer exists"],
+  23502: [400, "a required field is missing"],
+  23514: [400, "a field has an invalid value"],
+  "22P02": [400, "a field has an invalid value"],
+};
+
 // Express needs all four args to treat this as an error handler
 // eslint-disable-next-line no-unused-vars
 app.use("/api", (err, _req, res, _next) => {
+  const rejected = REJECTED[err.code];
+  if (rejected) return res.status(rejected[0]).json({ error: rejected[1] });
   console.error(err);
   res.status(500).json({ error: err.message });
 });
 
 // ── Frontend (built by `npm run build`) ─────────────────────────────────────
 app.use(express.static(DIST));
-app.get("/{*path}", (_req, res) => res.sendFile(path.join(DIST, "index.html")));
+// Only page routes get the app; a missing file must 404, or the service worker saves index.html as that file
+app.get("/{*path}", (req, res) => {
+  if (path.extname(req.path)) return res.status(404).end();
+  res.sendFile(path.join(DIST, "index.html"));
+});
 
 app.listen(PORT, HOST, () => console.log(`Project Wheel on http://${HOST}:${PORT}`));

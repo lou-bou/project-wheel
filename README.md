@@ -26,6 +26,10 @@ Previously ran on Vercel + Supabase; moved to the home server in October 2026.
 | Path | What it is |
 |---|---|
 | `src/App.jsx` | The whole frontend |
+| `src/app.css` | All styles, including the phone layout (`max-width: 700px`) |
+| `src/offline.js` | API calls, the saved copy of the data, and the device queue |
+| `src/sw.template.js` | Service worker; `vite.config.js` turns it into `dist/sw.js` on build |
+| `public/icons/` | App icons, rendered once from the logo and committed |
 | `server/index.js` | API + static file server |
 | `Schema.sql` | Database tables; run once on a fresh database |
 | `scripts/import-from-supabase.sh` | One-time copy of data from the old Supabase project (already done) |
@@ -44,6 +48,15 @@ All requests and responses are JSON.
 | POST | `/api/categories` | Create a category (`{ name }`) |
 | PATCH | `/api/categories/:id` | Rename a category |
 | DELETE | `/api/categories/:id` | Delete a category (projects stay, the link is removed) |
+
+## Phone app and offline
+
+The site can be installed from the browser (Add to Home Screen) and has a phone layout under 700px wide.
+
+- **Viewing and spinning** work offline from a copy of the data saved on the device.
+- **Project changes** (add, edit, status, delete) go into a queue on the device and are shown as "saved on this device" until the server confirms them. They're sent on load, when the connection returns and every 30 seconds. If two devices edit the same field, the last one sent wins.
+- **Category changes** need a connection, because queued projects can point at categories.
+- The service worker never caches `/api`. The laptop being down counts as offline, because Cloudflare answers with a 5xx page.
 
 ## Working on it locally
 
