@@ -8,6 +8,7 @@ import { Icon } from "./icons.jsx";
 import { Markdown } from "./markdown.jsx";
 import { Wheel } from "./Wheel.jsx";
 import { useCardDrag } from "./useCardDrag.js";
+import { appReady } from "./splash.js";
 import { plainText, relativeAge, safeUrl, splitLinks } from "./text.js";
 
 const DIFFICULTIES = ["Easy", "Medium", "Hard", "Expert"];
@@ -537,6 +538,8 @@ export default function App() {
       clearInterval(timer);
     };
   },[refresh]);
+
+  useEffect(()=>{if(loaded)appReady();},[loaded]);
 
   // Backlog is home. Other tabs sit one step above it, so back always returns to the Backlog.
   function goTo(v){

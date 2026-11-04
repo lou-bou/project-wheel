@@ -205,4 +205,6 @@ Everything above is the brand kit's spec, unchanged. These are the choices made 
 
 **Tokens.** `src/tokens.css` is the kit's file, with an "App additions" block at the end for what it didn't cover: `--pointer`, `--scrim`, `--shadow-float`, `--nav-height` and `--tap`. The logo in the app is drawn inline using tokens, so it switches between the light and dark variants by itself.
 
+**Loading splash: a second playful moment.** Section 1 says the spin is the only theatrical moment, and this is a deliberate exception that also previews the spin. On every full open, the slices pop out of the hub, the pointer drops on top, and the wheel does a full whirl with the pointer flicking. It then flies onto the header logo as the background fades, about 1.9s in. It keeps whirling while there's no data to show, for up to 5s. With saved data it doesn't wait for the network. With reduced motion it's the still logo, removed as soon as the app is ready. Installed phone apps may show the system's own static splash first, which can't be changed from here.
+
 **Exception to the shadow rule.** None in dark mode, and one soft shadow in light mode, used on sheets and the floating Spin button.

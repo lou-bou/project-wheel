@@ -29,6 +29,7 @@ Previously ran on Vercel + Supabase; moved to the home server in October 2026.
 |---|---|
 | `src/App.jsx` | App state and the Backlog, Board, Settings and idea detail screens |
 | `src/Wheel.jsx` | The SVG wheel and its spin |
+| `src/splash.js` | Removes the loading splash that `index.html` starts, flying the logo into the header |
 | `src/useCardDrag.js` | Drag and drop on the Board, for mouse and touch |
 | `src/markdown.jsx` | Small safe renderer for description previews |
 | `src/tokens.css` | Every colour, font, size and radius, from the brand kit (see `DESIGN.md`) |

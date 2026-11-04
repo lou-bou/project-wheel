@@ -34,6 +34,24 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Outside #root so React can't wipe it when it mounts. src/splash.js removes it. -->
+    <div id="splash" class="splash" role="img" aria-label="Whirl is loading">
+      <div class="splash-bg"></div>
+      <svg class="splash-mark" width="96" height="96" viewBox="0 0 160 160" aria-hidden="true">
+        <g class="splash-whirl">
+          <path class="splash-slice" d="M80 86 L80 24 A62 62 0 0 1 133.69 55 Z" fill="var(--brand-amber)"/>
+          <path class="splash-slice" d="M80 86 L133.69 55 A62 62 0 0 1 133.69 117 Z" fill="var(--brand-coral)"/>
+          <path class="splash-slice" d="M80 86 L133.69 117 A62 62 0 0 1 80 148 Z" fill="var(--brand-teal)"/>
+          <path class="splash-slice" d="M80 86 L80 148 A62 62 0 0 1 26.31 117 Z" fill="var(--brand-amber)"/>
+          <path class="splash-slice" d="M80 86 L26.31 117 A62 62 0 0 1 26.31 55 Z" fill="var(--brand-coral)"/>
+          <path class="splash-slice" d="M80 86 L26.31 55 A62 62 0 0 1 80 24 Z" fill="var(--brand-teal)"/>
+        </g>
+        <circle class="splash-hub" cx="80" cy="86" r="12" fill="var(--pointer)"/>
+        <g class="splash-pointer">
+          <polygon class="splash-flick" points="70,8 90,8 80,30" fill="var(--pointer)"/>
+        </g>
+      </svg>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
