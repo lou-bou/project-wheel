@@ -26,10 +26,13 @@ Previously ran on Vercel + Supabase; moved to the home server in October 2026.
 | Path | What it is |
 |---|---|
 | `src/App.jsx` | The whole frontend |
-| `src/app.css` | All styles, including the phone layout (`max-width: 700px`) |
+| `src/tokens.css` | Every colour, font and radius, with dark mode overrides (see `DESIGN.md`) |
+| `src/app.css` | Component styles, including the phone layout (`max-width: 700px`) |
 | `src/offline.js` | API calls, the saved copy of the data, and the device queue |
 | `src/sw.template.js` | Service worker; `vite.config.js` turns it into `dist/sw.js` on build |
-| `public/icons/` | App icons, rendered once from the logo and committed |
+| `public/icons/` | App icons, rendered once from `public/favicon.svg` and committed |
+| `public/fonts/` | Inter and Nunito, stored here so they work offline |
+| `DESIGN.md` | The theme and the reasons behind its decisions |
 | `server/index.js` | API + static file server |
 | `Schema.sql` | Database tables; run once on a fresh database |
 | `scripts/import-from-supabase.sh` | One-time copy of data from the old Supabase project (already done) |

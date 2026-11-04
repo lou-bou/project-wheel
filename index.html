@@ -9,12 +9,26 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <!-- use-credentials: without it Cloudflare Access can block the manifest request -->
     <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
-    <meta name="theme-color" content="#10140f" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#10140f" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f6f5f2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Wheel" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      // Runs before first paint so the page never flashes the wrong theme. Mirrors --bg in tokens.css.
+      window.savedWheelTheme = function () {
+        try { return localStorage.getItem('wheel.theme'); } catch { return null; }
+      };
+      window.setWheelTheme = function (theme) {
+        document.documentElement.dataset.theme = theme;
+        document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+          m.content = theme === 'dark' ? '#121211' : '#f6f5f2';
+        });
+      };
+      window.setWheelTheme(window.savedWheelTheme() || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -10,115 +10,43 @@ const DEV_TYPES    = ["Manual", "Assisted"];
 const STATUSES     = ["idea", "doing", "completed"];
 const CONTENT_OPTIONS = ["Made", "Not made"];
 
-// ── Arcade CRT palette ─────────────────────────────────────────────────────
-// Used by the wheel canvas, which can't read CSS
-const PANEL     = "#10140f";
-const TEXT_DIM  = "#5c7a63";
-const GREEN     = "#39ff88";
-const HOT       = "#ff2ecb";
+// Colours come from tokens.css. The wheel is a canvas, so it reads them with token() instead.
+const DIFF_COLOR = { Easy: "var(--ok)", Medium: "var(--accent)", Hard: "var(--hard)", Expert: "var(--hi)" };
+const STATUS_COLOR = { idea: "var(--muted)", doing: "var(--accent)", completed: "var(--ok)" };
+const CONTENT_COLOR = { Made: "var(--ok)", "Not made": "var(--muted)" };
+const ACCENT = "var(--accent)";
+const SLICES = ["--slice-1","--slice-2","--slice-3","--slice-4"];
 
-const DIFF_COLOR = { Easy: "#39ff88", Medium: "#f0c419", Hard: "#ff8b3d", Expert: "#ff4d4d" };
-const STATUS_COLOR = { idea: "#5c7a63", doing: "#22d3ee", completed: "#39ff88" };
-const CONTENT_COLOR = { Made: "#39ff88", "Not made": "#5c7a63" };
-const PALETTE = ["#39ff88","#0d4d2b","#f0c419","#1e7a45","#2ecc71","#166534","#a8e6b8","#0a3d1f"];
-
-function readableTextColor(hex) {
-  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
-  const luminance=(0.299*r+0.587*g+0.114*b)/255;
-  return luminance>0.55 ? "#0a0d0a" : "#eafff0";
+function token(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-// ── SVG Icons ─────────────────────────────────────────────────────────────
+// Neighbouring slices never match, including the last one against the first
+function sliceColor(i, total) {
+  if (i===total-1 && i%SLICES.length===0 && total>1) return SLICES[1];
+  return SLICES[i%SLICES.length];
+}
+
+// ── Icons (Lucide, pasted in so there is no dependency) ──────────────────────
+const ICON = { width:20, height:20, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:1.75, strokeLinecap:"round", strokeLinejoin:"round", "aria-hidden":true };
 const Icon = {
-  wheel: (sz=22) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
-      <circle cx="12" cy="12" r="10"/>
-      <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/>
-      <line x1="12" y1="2" x2="12" y2="9.5"/>
-      <line x1="12" y1="14.5" x2="12" y2="22"/>
-      <line x1="2" y1="12" x2="9.5" y2="12"/>
-      <line x1="14.5" y1="12" x2="22" y2="12"/>
-    </svg>
-  ),
-  grid: (sz=18) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
-      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-      <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-    </svg>
-  ),
-  edit: (sz=15) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-      <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>
-    </svg>
-  ),
-  trash: (sz=15) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
-      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-      <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-    </svg>
-  ),
-  plus: (sz=16) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
-      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-  ),
-  settings: (sz=16) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-    </svg>
-  ),
-  close: (sz=18) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
-      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-  ),
-  filter: (sz=18) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
-      <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/>
-    </svg>
-  ),
-  chevronDown: (sz=14) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter">
-      <polyline points="6 9 12 15 18 9"/>
-    </svg>
-  ),
-  chevronUp: (sz=14) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter">
-      <polyline points="18 15 12 9 6 15"/>
-    </svg>
-  ),
-  link: (sz=14) => (
-    <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-      <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-    </svg>
-  ),
+  wheel: <svg {...ICON}><circle cx="12" cy="12" r="8"/><path d="M12 2v7.5"/><path d="m19 5-5.23 5.23"/><path d="M22 12h-7.5"/><path d="m19 19-5.23-5.23"/><path d="M12 14.5V22"/><path d="M10.23 13.77 5 19"/><path d="M9.5 12H2"/><path d="M10.23 10.23 5 5"/><circle cx="12" cy="12" r="2.5"/></svg>,
+  grid: <svg {...ICON}><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>,
+  edit: <svg {...ICON}><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>,
+  trash: <svg {...ICON}><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
+  plus: <svg {...ICON}><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
+  tags: <svg {...ICON}><path d="M13.172 2a2 2 0 0 1 1.414.586l6.71 6.71a2.4 2.4 0 0 1 0 3.408l-4.592 4.592a2.4 2.4 0 0 1-3.408 0l-6.71-6.71A2 2 0 0 1 6 9.172V3a1 1 0 0 1 1-1z"/><path d="M2 7v6.172a2 2 0 0 0 .586 1.414l6.71 6.71a2.4 2.4 0 0 0 3.191.193"/><circle cx="10.5" cy="6.5" r=".5" fill="currentColor"/></svg>,
+  close: <svg {...ICON}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
+  filter: <svg {...ICON}><path d="M2 5h20"/><path d="M6 12h12"/><path d="M9 19h6"/></svg>,
+  chevronDown: <svg {...ICON}><path d="m6 9 6 6 6-6"/></svg>,
+  chevronUp: <svg {...ICON}><path d="m18 15-6-6-6 6"/></svg>,
+  link: <svg {...ICON}><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>,
+  sun: <svg {...ICON}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
+  moon: <svg {...ICON}><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>,
 };
 
-// ── Wheel logo — blocky pixel-terminal mark ─────────────────────────────────
-function WheelLogo({ size = 32 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <rect x="1" y="1" width="38" height="38" fill="#0a0d0a" stroke="#39ff88" strokeWidth="2"/>
-      <rect x="18" y="6" width="4" height="8" fill="#39ff88"/>
-      <rect x="18" y="26" width="4" height="8" fill="#39ff88"/>
-      <rect x="6" y="18" width="8" height="4" fill="#39ff88"/>
-      <rect x="26" y="18" width="8" height="4" fill="#39ff88"/>
-      <rect x="17" y="17" width="6" height="6" fill="#ff2ecb"/>
-      <rect x="18" y="2" width="4" height="4" fill="#f0c419"/>
-    </svg>
-  );
-}
-
-// ── CRT overlay (scanlines + vignette) ──────────────────────────────────────
-function CRTOverlay() {
-  return <div className="crt"/>;
-}
-
 // ── Spin Wheel ────────────────────────────────────────────────────────────────
-function SpinWheel({ projects, onResult }) {
+function SpinWheel({ projects, theme, onResult }) {
   const canvasRef    = useRef(null);
   const wrapRef      = useRef(null);
   const spinRef      = useRef({ angle: 0, spinning: false });
@@ -132,7 +60,18 @@ function SpinWheel({ projects, onResult }) {
     const s = sizeRef.current;
     buildStatic(projects, s);
     drawFrame(spinRef.current.angle, s);
-  }, [projects]);
+  }, [projects, theme]);
+
+  // The first draw can happen before Inter has loaded
+  useEffect(() => {
+    let live = true;
+    document.fonts.ready.then(() => {
+      if (!live) return;
+      buildStatic(projectsRef.current, sizeRef.current);
+      drawFrame(spinRef.current.angle, sizeRef.current);
+    });
+    return () => { live = false; };
+  }, []);
 
   function buildStatic(ps, size) {
     // Drawn at device resolution so the wheel stays sharp on phones
@@ -142,22 +81,26 @@ function SpinWheel({ projects, onResult }) {
     ctx.scale(dpr, dpr);
     const cx = size/2, cy = size/2, r = cx - 14;
     if (!ps.length) {
-      ctx.fillStyle=PANEL; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=token("--sunken"); ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
       staticRef.current = off; return;
     }
     const slice = (Math.PI*2)/ps.length;
     ps.forEach((p,i) => {
       const s2=i*slice, e=s2+slice;
       ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,s2,e); ctx.closePath();
-      ctx.fillStyle=PALETTE[i%PALETTE.length]; ctx.fill();
-      ctx.strokeStyle="#0a0d0a"; ctx.lineWidth=3; ctx.stroke();
+      ctx.fillStyle=token(sliceColor(i,ps.length)); ctx.fill();
+      ctx.strokeStyle=token("--bg"); ctx.lineWidth=2; ctx.stroke();
       const mid=s2+slice/2;
-      const maxLen=Math.max(4,Math.min(20,Math.floor((r*0.72*slice)/7)));
-      const label=p.name.length>maxLen?p.name.slice(0,maxLen-1)+"…":p.name;
-      const fs=ps.length>40?12:ps.length>20?14:ps.length>10?16:19;
+      const fs=ps.length>40?10:ps.length>20?11:ps.length>10?13:15;
+      ctx.font=`500 ${fs}px Inter,system-ui,sans-serif`;
+      // Labels run along the radius, so that's the room they get: rim to hub
+      const room=r-14-36;
+      let label=p.name;
+      while(label.length>1&&ctx.measureText(label).width>room) label=label.slice(0,-1);
+      if(label!==p.name) label=`${label.slice(0,-1)}…`;
       ctx.save(); ctx.translate(cx,cy); ctx.rotate(mid);
-      ctx.textAlign="right"; ctx.fillStyle=readableTextColor(PALETTE[i%PALETTE.length]);
-      ctx.font=`${fs}px 'VT323',monospace`; ctx.fillText(label,r-14,fs*0.38);
+      ctx.textAlign="right"; ctx.fillStyle=token("--on-slice");
+      ctx.font=`500 ${fs}px Inter,system-ui,sans-serif`; ctx.fillText(label,r-14,fs*0.38);
       ctx.restore();
     });
     staticRef.current = off;
@@ -171,20 +114,20 @@ function SpinWheel({ projects, onResult }) {
     ctx.clearRect(0,0,size,size);
     ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle); ctx.translate(-cx,-cy);
     ctx.drawImage(staticRef.current,0,0,size,size); ctx.restore();
-    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.lineWidth=4; ctx.strokeStyle=GREEN; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.lineWidth=2; ctx.strokeStyle=token("--line-strong"); ctx.stroke();
     if(!projectsRef.current.length) {
-      ctx.fillStyle=TEXT_DIM; ctx.font="18px 'VT323',monospace";
+      ctx.fillStyle=token("--muted"); ctx.font="14px Inter,system-ui,sans-serif";
       ctx.textAlign="center"; ctx.textBaseline="middle";
       ctx.fillText("no projects match filters",cx,cy+55);
     }
     ctx.beginPath(); ctx.arc(cx,cy,24,0,Math.PI*2);
-    ctx.fillStyle="#0a0d0a"; ctx.fill();
-    ctx.lineWidth=3; ctx.strokeStyle=GREEN; ctx.stroke();
+    ctx.fillStyle=token("--surface"); ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle=token("--line-strong"); ctx.stroke();
     ctx.beginPath(); ctx.arc(cx,cy,10,0,Math.PI*2);
-    ctx.fillStyle=GREEN; ctx.fill();
+    ctx.fillStyle=token("--accent-fill"); ctx.fill();
     ctx.beginPath();
     ctx.moveTo(cx,cy-r-6); ctx.lineTo(cx-14,cy-r+18); ctx.lineTo(cx+14,cy-r+18);
-    ctx.closePath(); ctx.fillStyle=HOT; ctx.fill();
+    ctx.closePath(); ctx.fillStyle=token("--ink"); ctx.fill();
   }
 
   function spin() {
@@ -238,7 +181,7 @@ function SpinWheel({ projects, onResult }) {
       <div ref={wrapRef} className="wheel-stage">
         <canvas ref={canvasRef} onClick={spin} className="wheel-canvas" aria-label="project wheel"/>
       </div>
-      <button onClick={spin} className="btn btn-spin">SPIN</button>
+      <button onClick={spin} className="btn btn-spin">spin</button>
     </div>
   );
 }
@@ -273,7 +216,7 @@ function Modal({ onClose, className = "", children }) {
   return (
     <div className="modal-back" onClick={onClose}>
       <div className={`modal ${className}`} role="dialog" aria-modal="true" onClick={e=>e.stopPropagation()}>
-        <button className="icon-btn modal-close" aria-label="close" onClick={onClose}>{Icon.close()}</button>
+        <button className="icon-btn modal-close" aria-label="close" onClick={onClose}>{Icon.close}</button>
         {children}
       </div>
     </div>
@@ -289,59 +232,60 @@ function ResultModal({ project, categories, onAccept, onReroll, onClose }) {
       <button className="result-toggle" onClick={()=>setExpanded(!expanded)}>
         <h2 className="result-name">
           {project.name}
-          <span className="result-chevron">{expanded?Icon.chevronUp(20):Icon.chevronDown(20)}</span>
+          <span className="result-chevron">{expanded?Icon.chevronUp:Icon.chevronDown}</span>
         </h2>
       </button>
       {expanded && <p className="result-desc">{project.description||"no description yet."}</p>}
       <div className="badges result-badges">
         <Badge color={DIFF_COLOR[project.difficulty]}>{project.difficulty}</Badge>
-        <Badge color={TEXT_DIM}>{project.dev_type}</Badge>
-        {catNames.map(c=><Badge key={c} color={TEXT_DIM}>{c}</Badge>)}
+        <Badge>{project.dev_type}</Badge>
+        {catNames.map(c=><Badge key={c}>{c}</Badge>)}
       </div>
       <div className="modal-actions">
-        <button onClick={onAccept} className="btn btn-primary">ACCEPT</button>
-        <button onClick={onReroll} className="btn btn-secondary">REROLL</button>
+        <button onClick={onAccept} className="btn btn-primary">accept</button>
+        <button onClick={onReroll} className="btn btn-secondary">reroll</button>
       </div>
     </Modal>
   );
 }
 
+// With a colour the badge carries meaning (difficulty, status); without one it's neutral
 function Badge({ color, children }) {
-  return <span className="badge" style={{ "--c":color }}>{children}</span>;
+  return <span className={`badge${color?" badge-meaning":""}`} style={color?{ "--c":color }:undefined}>{children}</span>;
 }
 
 // ── Project Card ──────────────────────────────────────────────────────────────
 function ProjectCard({ project, categories, onEdit, onDelete }) {
   const catNames=(project.categoryIds||[]).map(id=>categories.find(c=>c.id===id)?.name).filter(Boolean);
   return (
-    <div className="card" style={{ "--c":DIFF_COLOR[project.difficulty] }}>
+    <div className="card">
       <div className="card-head">
         <h3 className="card-name">{project.name}</h3>
         <div className="card-actions">
-          <IconBtn label={`edit ${project.name}`} onClick={()=>onEdit(project)}>{Icon.edit(17)}</IconBtn>
-          <IconBtn label={`delete ${project.name}`} onClick={()=>onDelete(project.id)}>{Icon.trash(17)}</IconBtn>
+          <IconBtn label={`edit ${project.name}`} onClick={()=>onEdit(project)}>{Icon.edit}</IconBtn>
+          <IconBtn danger label={`delete ${project.name}`} onClick={()=>onDelete(project.id)}>{Icon.trash}</IconBtn>
         </div>
       </div>
       {project.description && <p className="card-desc">{project.description}</p>}
       <div className="badges">
-        <Badge color={STATUS_COLOR[project.status]}>{project.status}</Badge>
+        <Badge color={project.status==="idea"?undefined:STATUS_COLOR[project.status]}>{project.status}</Badge>
         <Badge color={DIFF_COLOR[project.difficulty]}>{project.difficulty}</Badge>
-        <Badge color={TEXT_DIM}>{project.dev_type}</Badge>
-        <Badge color={project.has_content?CONTENT_COLOR.Made:CONTENT_COLOR["Not made"]}>{project.has_content?"content made":"no content"}</Badge>
-        {catNames.map(c=><Badge key={c} color={TEXT_DIM}>{c}</Badge>)}
+        <Badge>{project.dev_type}</Badge>
+        <Badge color={project.has_content?CONTENT_COLOR.Made:undefined}>{project.has_content?"content made":"no content"}</Badge>
+        {catNames.map(c=><Badge key={c}>{c}</Badge>)}
         {project.pending&&<span className="badge badge-pending">saved on this device</span>}
       </div>
       {project.status==="completed"&&project.link&&(
         <a href={project.link} target="_blank" rel="noreferrer" className="card-link">
-          {Icon.link(16)} view project
+          {Icon.link} view project
         </a>
       )}
     </div>
   );
 }
 
-function IconBtn({ onClick, label, children }) {
-  return <button onClick={onClick} aria-label={label} className="icon-btn">{children}</button>;
+function IconBtn({ onClick, label, danger, children }) {
+  return <button onClick={onClick} aria-label={label} className={`icon-btn${danger?" icon-danger":""}`}>{children}</button>;
 }
 
 // ── Project Form ──────────────────────────────────────────────────────────────
@@ -353,7 +297,7 @@ function ProjectFormModal({ project, categories, onSave, onClose }) {
   async function handleSave(){if(!form.name.trim())return;setLoading(true);await onSave(form);setLoading(false);}
   return (
     <Modal onClose={onClose} className="modal-form">
-      <h2 className="modal-title">{project?.id?"EDIT PROJECT":"ADD PROJECT"}</h2>
+      <h2 className="modal-title">{project?.id?"edit project":"add project"}</h2>
       <div className="form-fields">
         <Field label="name"><input value={form.name} onChange={e=>set("name",e.target.value)} className="input"/></Field>
         <Field label="description"><textarea value={form.description||""} onChange={e=>set("description",e.target.value)} rows={3} className="input input-area"/></Field>
@@ -384,9 +328,9 @@ function ProjectFormModal({ project, categories, onSave, onClose }) {
       </div>
       <div className="modal-actions">
         <button onClick={handleSave} disabled={loading||!form.name.trim()} className="btn btn-primary">
-          {loading?"SAVING...":"SAVE"}
+          {loading?"saving…":"save"}
         </button>
-        <button onClick={onClose} className="btn btn-secondary btn-grow-none">CANCEL</button>
+        <button onClick={onClose} className="btn btn-secondary btn-grow-none">cancel</button>
       </div>
     </Modal>
   );
@@ -407,7 +351,7 @@ function SelectField({ value, onChange, options }) {
       <select value={value} onChange={onChange} className="input select">
         {options.map(o=><option key={o}>{o}</option>)}
       </select>
-      <span className="select-chevron">{Icon.chevronDown(15)}</span>
+      <span className="select-chevron">{Icon.chevronDown}</span>
     </div>
   );
 }
@@ -418,13 +362,13 @@ function CategoryManager({ categories, projects, online, onAdd, onRename, onDele
   const [editing,setEditing]=useState(null);
   return (
     <Modal onClose={onClose} className="modal-cats">
-      <h2 className="modal-title">MANAGE CATEGORIES</h2>
+      <h2 className="modal-title">manage categories</h2>
       {!online&&<p className="modal-note">category changes need a connection. you can still look at them here.</p>}
       <div className="cat-add">
         <input value={newName} disabled={!online} onChange={e=>setNewName(e.target.value)}
           onKeyDown={e=>{if(e.key==="Enter"&&newName.trim()){onAdd(newName.trim());setNewName("");}}}
           placeholder="new category name" className="input"/>
-        <button disabled={!online} onClick={()=>{if(newName.trim()){onAdd(newName.trim());setNewName("");}}} className="btn btn-primary btn-small">ADD</button>
+        <button disabled={!online} onClick={()=>{if(newName.trim()){onAdd(newName.trim());setNewName("");}}} className="btn btn-primary btn-small">add</button>
       </div>
       <div className="cat-list">
         {categories.map(c=>{
@@ -438,8 +382,8 @@ function CategoryManager({ categories, projects, online, onAdd, onRename, onDele
               ):(
                 <span className="cat-name">{c.name}<span className="cat-count">{count} projects</span></span>
               )}
-              {online&&<IconBtn label={`rename ${c.name}`} onClick={()=>setEditing(c.id)}>{Icon.edit()}</IconBtn>}
-              {online&&<IconBtn label={`delete ${c.name}`} onClick={()=>onDelete(c.id)}>{Icon.trash()}</IconBtn>}
+              {online&&<IconBtn label={`rename ${c.name}`} onClick={()=>setEditing(c.id)}>{Icon.edit}</IconBtn>}
+              {online&&<IconBtn danger label={`delete ${c.name}`} onClick={()=>onDelete(c.id)}>{Icon.trash}</IconBtn>}
             </div>
           );
         })}
@@ -455,10 +399,10 @@ function MultiFilter({ label, options, selected, onChange, colorMap }) {
     <div className="filter-group">
       <p className="filter-label">{label}</p>
       <div className="filter-options">
-        <FilterBtn active={all} color={GREEN} onClick={()=>onChange([])}>all</FilterBtn>
+        <FilterBtn active={all} color={ACCENT} onClick={()=>onChange([])}>all</FilterBtn>
         {options.map(o=>{
           const active=selected.includes(o);
-          const color=colorMap?colorMap[o]:GREEN;
+          const color=colorMap?colorMap[o]:ACCENT;
           return(
             <FilterBtn key={o} active={active} color={color}
               onClick={()=>onChange(active?selected.filter(x=>x!==o):[...selected,o])}>
@@ -491,7 +435,7 @@ function Filters({ categories, f }) {
 function FiltersButton({ count, onClick }) {
   return (
     <button onClick={onClick} className="btn-filters">
-      {Icon.filter(16)} filters{count>0&&` (${count})`}
+      {Icon.filter} filters{count>0&&` (${count})`}
     </button>
   );
 }
@@ -499,11 +443,11 @@ function FiltersButton({ count, onClick }) {
 function FilterSheet({ categories, f, count, shown, onClose }) {
   return (
     <Modal onClose={onClose} className="modal-filters">
-      <h2 className="modal-title">FILTERS</h2>
+      <h2 className="modal-title">filters</h2>
       <div className="filter-sheet-body"><Filters categories={categories} f={f}/></div>
       <div className="modal-actions">
-        <button onClick={onClose} className="btn btn-primary">SHOW {shown}</button>
-        {count>0&&<button onClick={f.clear} className="btn btn-secondary btn-grow-none">CLEAR</button>}
+        <button onClick={onClose} className="btn btn-primary">show {shown}</button>
+        {count>0&&<button onClick={f.clear} className="btn btn-secondary btn-grow-none">clear</button>}
       </div>
     </Modal>
   );
@@ -559,6 +503,15 @@ export default function App() {
   const [showCatManager,setShowCatManager]=useState(false);
   const [showAddProject,setShowAddProject]=useState(false);
   const [showFilters,setShowFilters]=useState(false);
+  const [theme,setTheme]=useState(document.documentElement.dataset.theme||"light");
+
+  // index.html sets the theme before first paint: the saved choice, otherwise the system's
+  function toggleTheme(){
+    const next=theme==="dark"?"light":"dark";
+    window.setWheelTheme(next);
+    try{localStorage.setItem("wheel.theme",next);}catch{/* blocked storage: lasts this visit only */}
+    setTheme(next);
+  }
 
   const show=useCallback((data)=>{
     if(!data) return;
@@ -579,11 +532,19 @@ export default function App() {
     Promise.resolve().then(refresh);
     function whenVisible(){if(document.visibilityState==="visible")refresh();}
     function onPop(e){setView(e.state?.view||"wheel");}
+    const system=matchMedia("(prefers-color-scheme: dark)");
+    function onSystemTheme(e){
+      if(window.savedWheelTheme()) return;
+      const next=e.matches?"dark":"light";
+      window.setWheelTheme(next);setTheme(next);
+    }
+    system.addEventListener("change",onSystemTheme);
     window.addEventListener("online",refresh);
     document.addEventListener("visibilitychange",whenVisible);
     window.addEventListener("popstate",onPop);
     const timer=setInterval(()=>{if(queuedCount()>0)refresh();},30000);
     return ()=>{
+      system.removeEventListener("change",onSystemTheme);
       window.removeEventListener("online",refresh);
       document.removeEventListener("visibilitychange",whenVisible);
       window.removeEventListener("popstate",onPop);
@@ -673,20 +634,18 @@ export default function App() {
 
   return (
     <>
-      <CRTOverlay/>
-
       <div className="shell">
 
         {/* Sidebar (desktop) */}
         <aside className="sidebar">
           <div className="brand">
-            <WheelLogo size={34}/>
-            <span className="brand-name">PROJECT WHEEL</span>
+            <img src="/favicon.svg" alt="" className="brand-logo"/>
+            <span className="brand-name">project wheel</span>
           </div>
           <p className="brand-count">{projects.length} projects</p>
 
           <div className="nav">
-            {[["wheel",Icon.wheel(18),"spin the wheel"],["projects",Icon.grid(17),"browse projects"]].map(([v,icon,label])=>(
+            {[["wheel",Icon.wheel,"spin the wheel"],["projects",Icon.grid,"browse projects"]].map(([v,icon,label])=>(
               <button key={v} onClick={()=>goTo(v)} className={`nav-btn${view===v?" active":""}`}>
                 <span className="nav-icon">{icon}</span>{label}
               </button>
@@ -697,7 +656,10 @@ export default function App() {
 
           <div className="sidebar-actions">
             <button onClick={()=>setShowCatManager(true)} className="btn-row">
-              {Icon.settings(16)} manage categories
+              {Icon.tags} manage categories
+            </button>
+            <button onClick={toggleTheme} className="btn-row">
+              {theme==="dark"?Icon.sun:Icon.moon} {theme==="dark"?"light mode":"dark mode"}
             </button>
           </div>
         </aside>
@@ -709,28 +671,28 @@ export default function App() {
           {view==="wheel"&&(
             <div className="view-wheel">
               <div className="wheel-head">
-                <h1 className="wheel-title">WHAT SHOULD YOU BUILD NEXT?</h1>
+                <h1 className="wheel-title">what should you build next?</h1>
                 <p className="view-sub">{filtered.length} projects in the pool</p>
                 <FiltersButton count={filterCount} onClick={()=>setShowFilters(true)}/>
               </div>
               {loaded||projects.length
-                ? <SpinWheel projects={filtered} onResult={p=>setResult(p)}/>
+                ? <SpinWheel projects={filtered} theme={theme} onResult={p=>setResult(p)}/>
                 : <p className="view-sub">loading…</p>}
             </div>
           )}
 
           {view==="projects"&&(
-            <div className="view-projects">
+            <div className="view-projects"><div className="projects-inner">
               <div className="projects-head">
                 <div>
-                  <h1 className="projects-title">PROJECTS</h1>
+                  <h1 className="projects-title">projects</h1>
                   <p className="view-sub">showing {filtered.length} of {projects.length}</p>
                 </div>
                 <div className="projects-tools">
                   <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="search…" className="input projects-search"/>
                   <FiltersButton count={filterCount} onClick={()=>setShowFilters(true)}/>
                   <button onClick={()=>setShowAddProject(true)} className="btn btn-primary btn-add">
-                    {Icon.plus(15)} ADD
+                    {Icon.plus} add
                   </button>
                 </div>
               </div>
@@ -740,16 +702,17 @@ export default function App() {
                 ))}
                 {filtered.length===0&&<p className="empty">no projects match. adjust your filters.</p>}
               </div>
-            </div>
+            </div></div>
           )}
         </main>
 
         {/* Bottom tabs (phone) */}
         <nav className="tabs">
-          {[["wheel",Icon.wheel(22),"wheel"],["projects",Icon.grid(22),"projects"]].map(([v,icon,label])=>(
-            <button key={v} onClick={()=>goTo(v)} className={`tab${view===v?" active":""}`}>{icon}<span>{label}</span></button>
+          {[["wheel",Icon.wheel,"wheel"],["projects",Icon.grid,"projects"]].map(([v,icon,label])=>(
+            <button key={v} onClick={()=>goTo(v)} className={`tab${view===v?" active":""}`}><span className="tab-icon">{icon}</span>{label}</button>
           ))}
-          <button onClick={()=>setShowCatManager(true)} className="tab">{Icon.settings(22)}<span>categories</span></button>
+          <button onClick={()=>setShowCatManager(true)} className="tab"><span className="tab-icon">{Icon.tags}</span>categories</button>
+          <button onClick={toggleTheme} className="tab"><span className="tab-icon">{theme==="dark"?Icon.sun:Icon.moon}</span>{theme==="dark"?"light":"dark"}</button>
         </nav>
       </div>
 
