@@ -189,9 +189,9 @@ Everything above is the brand kit's spec, unchanged. These are the choices made 
 
 **Added to reach the whole spec.**
 - *New idea:* a neutral button next to search, because coral is kept for Spin and Start building.
-- *Moving ideas on the Board:* each card has one ghost button for the next step (Start building, Mark completed, Back to ideas). No drag and drop, because it's unreliable on phones and would need a library.
+- *Moving ideas on the Board:* drag a card to another column. On phones only one column shows, so you hold a card for 300ms, then drop it on the Idea, Doing or Completed tab, and the Board follows it there. A normal swipe still scrolls, and Esc cancels. Order inside a column stays alphabetical, because ideas have no saved position. The Status field in the detail screen does the same job without dragging, including from a keyboard.
 - *Filters on the Wheel screen:* a Filters button opens a sheet, since the chip row lives on the Backlog.
-- *Settings:* theme (System, Light, Dark), the optional spin tick where the device supports vibration, and category management.
+- *Settings:* theme (System, Light, Dark), the optional spin tick on touch devices that support vibration, and category management. From 900px wide it's two columns of cards, centred and at most 1000px wide, with Categories on the right because it's the long list.
 - *Desktop navigation:* in the header, next to the Spin button.
 - *Result sheet:* also shows up to three lines of the description.
 

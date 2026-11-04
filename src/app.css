@@ -181,16 +181,27 @@ select option { background: var(--surface); }
 .segmented { display: flex; padding: 3px; gap: 3px; background: var(--surface-2); border-radius: var(--radius-sm); }
 .segmented button { flex: 1; min-height: var(--tap); padding: 0 var(--space-2); border: none; border-radius: 6px; background: none; color: var(--text-muted); font-size: var(--text-sm); white-space: nowrap; }
 .segmented button.on { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: inset 0 0 0 1px var(--border); }
-.board-switch { margin-bottom: var(--space-3); }
+.board-screen { flex: 1 0 auto; } /* Grows with its cards, so the tabs stay stuck for the whole list */
+.board-hint { color: var(--text-muted); font-size: var(--text-sm); margin: calc(var(--space-3) * -1) 0 var(--space-3); }
+.hint-desktop { display: none; }
+/* The tabs are the drop targets on phones, so they have to stay on screen in a long list */
+.board-switch { position: sticky; top: 0; z-index: 5; margin-bottom: var(--space-1); padding: var(--space-1) 0 var(--space-2); background: var(--bg); }
+.board { flex: 1; }
 .column { display: none; }
 .column.current { display: block; }
+.column.drop-over { outline: 2px solid var(--status); outline-offset: 2px; border-radius: var(--radius-sm); background: var(--surface-2); }
+.segmented button.drop-over { box-shadow: inset 0 0 0 2px var(--status); color: var(--text); }
 .column-head { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); margin-bottom: var(--space-3); background: var(--surface); border: 1px solid var(--border); border-top: 4px solid var(--status); border-radius: var(--radius-sm); font-family: var(--font-display); font-size: var(--text-md); font-weight: 600; }
 .column-head .mono { margin-left: auto; }
-.board-item { display: flex; flex-direction: column; gap: var(--space-1); }
-.btn-move { align-self: flex-end; }
+.board-item { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.board-item.carried { opacity: 0.35; }
+.drag-ghost { position: fixed; left: 0; top: 0; z-index: 200; pointer-events: none; will-change: transform; }
+.drag-ghost .card { min-height: 0; border-color: var(--text-muted); box-shadow: var(--shadow-float); }
+.drag-ghost .card-desc, .drag-ghost .card-meta { display: none; } /* Small on phones, so more of the screen stays visible */
+.card-dragging, .card-dragging * { cursor: grabbing !important; -webkit-user-select: none; user-select: none; }
 
 /* ── Settings ──────────────────────────────────────────────────────────── */
-.settings-screen { max-width: 40rem; width: 100%; }
+.settings-screen { flex: 1 0 auto; max-width: 40rem; width: 100%; }
 .settings-section { padding: var(--space-4) 0; border-top: 1px solid var(--border); }
 .section-title { font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); margin-bottom: var(--space-3); }
 .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--tap); }
@@ -241,6 +252,7 @@ select option { background: var(--surface); }
 /* ── Hover, only where there is one ────────────────────────────────────── */
 @media (hover: hover) {
   .card:hover { background: var(--surface-2); }
+  .board-item .card { cursor: grab; }
   .chip:not(.on):hover, .btn-neutral:hover, .btn-ghost:hover, .icon-btn:hover, .top-nav-btn:not(.on):hover { background: var(--border); color: var(--text); }
   .icon-btn.danger:hover { color: var(--danger); }
   .text-btn:hover { color: var(--text); }
@@ -284,9 +296,18 @@ select option { background: var(--surface); }
   .btn { min-height: 40px; }
   .icon-btn { width: 36px; height: 36px; }
 
-  .board-switch { display: none; }
-  .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); align-items: start; }
+  .board-switch, .hint-phone { display: none; }
+  .hint-desktop { display: block; }
+  .drag-ghost .card-desc { display: block; }
+  .drag-ghost .card-meta { display: flex; }
+  /* Columns stretch to full height, so a short column is still easy to drop on */
+  .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
   .column, .column.current { display: block; }
+  .settings-screen { max-width: 62.5rem; margin-inline: auto; }
+  .settings-grid { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); gap: var(--space-4); align-items: start; }
+  .settings-col { display: flex; flex-direction: column; gap: var(--space-4); }
+  .settings-section { padding: var(--space-5); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+
   .sheet-back { align-items: center; padding: var(--space-5); }
   .sheet { border-radius: var(--radius-lg); padding: var(--space-5); }
 }

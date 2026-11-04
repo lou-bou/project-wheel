@@ -7,6 +7,7 @@ import {
 import { Icon } from "./icons.jsx";
 import { Markdown } from "./markdown.jsx";
 import { Wheel } from "./Wheel.jsx";
+import { useCardDrag } from "./useCardDrag.js";
 import { plainText, relativeAge, safeUrl, splitLinks } from "./text.js";
 
 const DIFFICULTIES = ["Easy", "Medium", "Hard", "Expert"];
@@ -112,11 +113,12 @@ function Modal({ onClose, className = "", label, children }) {
   );
 }
 
-function Segmented({ value, options, onChange, label }) {
+function Segmented({ value, options, onChange, label, dropOver, dropTarget }) {
   return (
     <div className="segmented" role="group" aria-label={label}>
       {options.map(([v, text]) => (
-        <button key={v} aria-pressed={value===v} className={value===v?"on":""} onClick={()=>onChange(v)}>{text}</button>
+        <button key={v} aria-pressed={value===v} data-drop={dropTarget?v:undefined} onClick={()=>onChange(v)}
+          className={`${value===v?"on":""}${dropOver===v?` drop-over status-${v}`:""}`}>{text}</button>
       ))}
     </div>
   );
@@ -262,28 +264,35 @@ function WheelScreen({ pool, categories, filters, toggle, filterCount, clearFilt
   );
 }
 
-const NEXT_STATUS = { idea: ["doing","Start building"], doing: ["completed","Mark completed"], completed: ["idea","Back to ideas"] };
-
 function BoardScreen({ projects, categories, onOpen, onMove, burstId }) {
   const [column,setColumn]=useState("idea");
+  const {drag,ghost,rootProps,startDrag}=useCardDrag((id,status)=>{
+    const project=projects.find(p=>p.id===id);
+    if(!project) return;
+    onMove(project,status);
+    setColumn(status); // On phones, follow the card to where it landed
+  });
+  const carried=drag&&projects.find(p=>p.id===drag.id);
   return (
-    <div className="screen board-screen">
+    <div className="screen board-screen" {...rootProps}>
       <h1 className="screen-title">Board</h1>
+      <p className="board-hint hint-phone">Hold a card, then drag it onto a tab.</p>
+      <p className="board-hint hint-desktop">Drag a card to another column.</p>
       <div className="board-switch">
-        <Segmented label="Column" value={column} onChange={setColumn}
+        <Segmented label="Column" value={column} onChange={setColumn} dropTarget dropOver={drag?.over}
           options={STATUSES.map(s=>[s,`${STATUS_LABEL[s]} ${projects.filter(p=>p.status===s).length}`])}/>
       </div>
       <div className="board">
         {STATUSES.map(s=>{
           const items=projects.filter(p=>p.status===s);
           return (
-            <section key={s} className={`column status-${s}${column===s?" current":""}`} aria-label={STATUS_LABEL[s]}>
+            <section key={s} data-drop={s} aria-label={STATUS_LABEL[s]}
+              className={`column status-${s}${column===s?" current":""}${drag?.over===s?" drop-over":""}`}>
               <h2 className="column-head"><Icon name={s}/>{STATUS_LABEL[s]}<span className="mono">{items.length}</span></h2>
               <div className="card-list">
                 {items.map(p=>(
-                  <div key={p.id} className="board-item">
+                  <div key={p.id} className={`board-item${drag?.id===p.id?" carried":""}`} onPointerDown={e=>startDrag(e,p.id,s)}>
                     <IdeaCard idea={p} categories={categories} burst={burstId===p.id} onOpen={onOpen}/>
-                    <button className="btn btn-ghost btn-move" onClick={()=>onMove(p,NEXT_STATUS[s][0])}>{NEXT_STATUS[s][1]}</button>
                   </div>
                 ))}
                 {items.length===0&&<p className="empty">Nothing here.</p>}
@@ -292,6 +301,11 @@ function BoardScreen({ projects, categories, onOpen, onMove, burstId }) {
           );
         })}
       </div>
+      {carried&&(
+        <div className="drag-ghost" ref={ghost} style={{width:drag.width}} inert>
+          <IdeaCard idea={carried} categories={categories} onOpen={()=>{}}/>
+        </div>
+      )}
     </div>
   );
 }
@@ -336,23 +350,28 @@ function SettingsScreen({ theme, setTheme, tick, setTick, categories, projects, 
   return (
     <div className="screen settings-screen">
       <h1 className="screen-title">Settings</h1>
-      <section className="settings-section">
-        <h2 className="section-title">Appearance</h2>
-        <Segmented label="Theme" value={theme} onChange={setTheme} options={[["system","System"],["light","Light"],["dark","Dark"]]}/>
-      </section>
-      {"vibrate" in navigator&&(
+      <div className="settings-grid">
+        <div className="settings-col">
+          <section className="settings-section">
+            <h2 className="section-title">Appearance</h2>
+            <Segmented label="Theme" value={theme} onChange={setTheme} options={[["system","System"],["light","Light"],["dark","Dark"]]}/>
+          </section>
+          {/* Desktop browsers have navigator.vibrate too, but nothing to vibrate */}
+          {"vibrate" in navigator&&matchMedia("(pointer: coarse)").matches&&(
+            <section className="settings-section">
+              <h2 className="section-title">Spin</h2>
+              <label className="toggle-row">
+                <span>Tick while the wheel spins<span className="muted small">A small vibration at each slice, where the phone supports it.</span></span>
+                <input type="checkbox" checked={tick} onChange={e=>setTick(e.target.checked)}/>
+              </label>
+            </section>
+          )}
+        </div>
         <section className="settings-section">
-          <h2 className="section-title">Spin</h2>
-          <label className="toggle-row">
-            <span>Tick while the wheel spins<span className="muted small">A small vibration at each slice, where the phone supports it.</span></span>
-            <input type="checkbox" checked={tick} onChange={e=>setTick(e.target.checked)}/>
-          </label>
+          <h2 className="section-title">Categories</h2>
+          <CategoryManager categories={categories} projects={projects} online={online} onAdd={onAdd} onRename={onRename} onDelete={onDelete}/>
         </section>
-      )}
-      <section className="settings-section">
-        <h2 className="section-title">Categories</h2>
-        <CategoryManager categories={categories} projects={projects} online={online} onAdd={onAdd} onRename={onRename} onDelete={onDelete}/>
-      </section>
+      </div>
     </div>
   );
 }
